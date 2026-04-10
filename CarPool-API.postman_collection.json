@@ -1,0 +1,892 @@
+{
+  "info": {
+    "name": "CarPool API",
+    "description": "Complete CarPool API collection for Trivazo.\n\n**Setup:**\n1. Set `base_url` variable to your server (e.g. `http://localhost`)\n2. Run **Driver Register** or **Driver Login** → the test script auto-saves `driver_token`\n3. Run **Passenger Login** (from your existing auth endpoint) → manually set `passenger_token`\n4. Admin routes use session cookies — set `xsrf_token` and `session` from browser after logging in",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",         "value": "http://localhost",  "type": "string" },
+    { "key": "driver_token",     "value": "",                  "type": "string" },
+    { "key": "passenger_token",  "value": "",                  "type": "string" },
+    { "key": "xsrf_token",       "value": "",                  "type": "string" },
+    { "key": "session",          "value": "",                  "type": "string" },
+    { "key": "route_id",         "value": "1",                 "type": "string" },
+    { "key": "booking_id",       "value": "1",                 "type": "string" },
+    { "key": "driver_id",        "value": "1",                 "type": "string" },
+    { "key": "withdrawal_id",    "value": "1",                 "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "Driver Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "    pm.collectionVariables.set('driver_token', json.token);",
+                  "    pm.collectionVariables.set('driver_id', json.driver.id);",
+                  "    console.log('driver_token saved');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Driver\",\n  \"phone\": \"01700000001\",\n  \"email\": \"john@driver.com\",\n  \"password\": \"secret123\",\n  \"vehicle_type\": \"Sedan\",\n  \"vehicle_number\": \"DHK-1234\",\n  \"vehicle_model\": \"Toyota Corolla\",\n  \"vehicle_color\": \"White\",\n  \"vehicle_capacity\": 4,\n  \"license_number\": \"DL-9876543\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/driver/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "driver", "register"]
+            },
+            "description": "Register a new carpool driver. Returns a Passport token. Auto-saves `driver_token` and `driver_id`."
+          }
+        },
+        {
+          "name": "Driver Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "    pm.collectionVariables.set('driver_token', json.token);",
+                  "    pm.collectionVariables.set('driver_id', json.driver.id);",
+                  "    console.log('driver_token saved');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"01700000001\",\n  \"password\": \"secret123\",\n  \"fcm_token\": \"device_fcm_token_here\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/driver/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "driver", "login"]
+            },
+            "description": "Login as a carpool driver. Auto-saves `driver_token` and `driver_id`. Driver must have status=active."
+          }
+        },
+        {
+          "name": "Search Routes",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/routes/search?origin_lat=23.8103&origin_lng=90.4125&destination_lat=23.7000&destination_lng=90.3750&date=2026-04-15&seats=2&radius_km=5&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "routes", "search"],
+              "query": [
+                { "key": "origin_lat",       "value": "23.8103",     "description": "Required. Origin latitude (-90 to 90)" },
+                { "key": "origin_lng",       "value": "90.4125",     "description": "Required. Origin longitude (-180 to 180)" },
+                { "key": "destination_lat",  "value": "23.7000",     "description": "Required. Destination latitude" },
+                { "key": "destination_lng",  "value": "90.3750",     "description": "Required. Destination longitude" },
+                { "key": "date",             "value": "2026-04-15",  "description": "Required. Format: Y-m-d" },
+                { "key": "seats",            "value": "2",           "description": "Required. Min 1, max 10" },
+                { "key": "radius_km",        "value": "5",           "description": "Optional. Search radius in km (0.5-50). Default 5" },
+                { "key": "limit",            "value": "10",          "description": "Optional. Results per page. Default 15" }
+              ]
+            },
+            "description": "Search available routes by origin/destination coordinates and date. Uses haversine formula to find routes within radius_km of the given coordinates."
+          }
+        },
+        {
+          "name": "Get Route Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/routes/{{route_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "routes", "{{route_id}}"]
+            },
+            "description": "Get details of a single route. Only returns routes with status open or full."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Driver",
+      "description": "All endpoints require `Authorization: Bearer {{driver_token}}`",
+      "item": [
+        {
+          "name": "Auth",
+          "item": [
+            {
+              "name": "Get Profile",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{driver_token}}", "type": "string" }]
+                },
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/carpool/driver/profile",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "carpool", "driver", "profile"]
+                },
+                "description": "Get current driver profile including wallet balance."
+              }
+            },
+            {
+              "name": "Update Profile",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{driver_token}}", "type": "string" }]
+                },
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept",       "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"John Driver Updated\",\n  \"vehicle_color\": \"Black\",\n  \"vehicle_type\": \"SUV\",\n  \"vehicle_model\": \"Toyota RAV4\",\n  \"vehicle_number\": \"DHK-5678\",\n  \"vehicle_capacity\": 6,\n  \"fcm_token\": \"new_fcm_token_here\",\n  \"is_online\": true\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/carpool/driver/profile",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "carpool", "driver", "profile"]
+                },
+                "description": "Update driver profile. All fields are optional (PATCH-style). Use `is_online` true/false to toggle availability."
+              }
+            },
+            {
+              "name": "Logout",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{driver_token}}", "type": "string" }]
+                },
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/carpool/driver/logout",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "carpool", "driver", "logout"]
+                },
+                "description": "Revokes the current Passport access token."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Wallet",
+          "item": [
+            {
+              "name": "Get Wallet Balance",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{driver_token}}", "type": "string" }]
+                },
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/carpool/driver/wallet",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "carpool", "driver", "wallet"]
+                },
+                "description": "Returns available_balance, pending_balance, total_earned, total_withdrawn."
+              }
+            },
+            {
+              "name": "Transaction History",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{driver_token}}", "type": "string" }]
+                },
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/carpool/driver/wallet/transactions?limit=20",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "carpool", "driver", "wallet", "transactions"],
+                  "query": [
+                    { "key": "limit", "value": "20", "description": "Results per page. Default 15" }
+                  ]
+                },
+                "description": "Paginated list of all wallet transactions: booking_payment, commission, driver_credit, refund, withdrawal."
+              }
+            },
+            {
+              "name": "Request Withdrawal",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var json = pm.response.json();",
+                      "if (json.withdrawal) {",
+                      "    pm.collectionVariables.set('withdrawal_id', json.withdrawal.id);",
+                      "    console.log('withdrawal_id saved:', json.withdrawal.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{driver_token}}", "type": "string" }]
+                },
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept",       "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 50.00,\n  \"account_details\": {\n    \"bank_name\": \"Dutch Bangla Bank\",\n    \"account_number\": \"123456789\",\n    \"account_holder\": \"John Driver\",\n    \"routing_number\": \"090264100\"\n  }\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/carpool/driver/wallet/withdraw",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "carpool", "driver", "wallet", "withdraw"]
+                },
+                "description": "Request a withdrawal. Amount must be >= configured minimum (default 10). Available balance must be sufficient. `account_details` is a free-form JSON object. Auto-saves `withdrawal_id`."
+              }
+            },
+            {
+              "name": "List Withdrawal Requests",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{driver_token}}", "type": "string" }]
+                },
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/carpool/driver/wallet/withdrawals?status=pending&limit=10",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "carpool", "driver", "wallet", "withdrawals"],
+                  "query": [
+                    { "key": "status", "value": "pending", "description": "Options: pending | approved | rejected | paid | all" },
+                    { "key": "limit",  "value": "10",      "description": "Results per page. Default 15" }
+                  ]
+                },
+                "description": "Driver's own withdrawal requests filtered by status."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Routes",
+          "item": [
+            {
+              "name": "Create Route",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var json = pm.response.json();",
+                      "if (json.route) {",
+                      "    pm.collectionVariables.set('route_id', json.route.id);",
+                      "    console.log('route_id saved:', json.route.id);",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{driver_token}}", "type": "string" }]
+                },
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Accept",       "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"origin_name\": \"Mirpur 10, Dhaka\",\n  \"origin_lat\": 23.8057,\n  \"origin_lng\": 90.3668,\n  \"destination_name\": \"Motijheel, Dhaka\",\n  \"destination_lat\": 23.7272,\n  \"destination_lng\": 90.4192,\n  \"waypoints\": [\n    { \"name\": \"Farmgate\", \"lat\": 23.7567, \"lng\": 90.3871 }\n  ],\n  \"ride_type\": \"scheduled\",\n  \"departure_at\": \"2026-04-15 08:00:00\",\n  \"total_seats\": 3,\n  \"price_per_seat\": 80,\n  \"currency\": \"BDT\",\n  \"estimated_duration_min\": 45,\n  \"estimated_distance_km\": 12.5,\n  \"note\": \"No smoking inside the car\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/carpool/driver/my-routes",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "carpool", "driver", "my-routes"]
+                },
+                "description": "Create a new carpool route. Driver must be is_verified=true. `ride_type`: instant | scheduled. `departure_at` must be in the future. `total_seats` cannot exceed `vehicle_capacity`. Auto-saves `route_id`."
+              }
+            },
+            {
+              "name": "List My Routes",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{driver_token}}", "type": "string" }]
+                },
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/carpool/driver/my-routes?status=open&limit=15",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "carpool", "driver", "my-routes"],
+                  "query": [
+                    { "key": "status", "value": "open",  "description": "Options: open | full | departed | completed | cancelled | all" },
+                    { "key": "limit",  "value": "15",    "description": "Results per page. Default 15" }
+                  ]
+                },
+                "description": "Paginated list of the authenticated driver's own routes with booking counts."
+              }
+            },
+            {
+              "name": "Get My Route Detail",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{driver_token}}", "type": "string" }]
+                },
+                "method": "GET",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/carpool/driver/my-routes/{{route_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "carpool", "driver", "my-routes", "{{route_id}}"]
+                },
+                "description": "Full route detail including all bookings and each booking's passengers."
+              }
+            },
+            {
+              "name": "Depart (Start Ride)",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{driver_token}}", "type": "string" }]
+                },
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/carpool/driver/my-routes/{{route_id}}/depart",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "carpool", "driver", "my-routes", "{{route_id}}", "depart"]
+                },
+                "description": "Mark route as departed. Transitions all confirmed bookings to `departed`. Route must be in status open or full."
+              }
+            },
+            {
+              "name": "Complete Ride",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{driver_token}}", "type": "string" }]
+                },
+                "method": "POST",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/carpool/driver/my-routes/{{route_id}}/complete",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "carpool", "driver", "my-routes", "{{route_id}}", "complete"]
+                },
+                "description": "Mark route as completed. Fires CarPoolRideCompletedEvent per booking which settles driver wallet (deducts admin commission) and sends passenger notification."
+              }
+            },
+            {
+              "name": "Delete Route",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [{ "key": "token", "value": "{{driver_token}}", "type": "string" }]
+                },
+                "method": "DELETE",
+                "header": [
+                  { "key": "Accept", "value": "application/json" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/carpool/driver/my-routes/{{route_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "carpool", "driver", "my-routes", "{{route_id}}"]
+                },
+                "description": "Cancel and delete a route. Not allowed if route is already departed or completed."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Passenger",
+      "description": "All endpoints require `Authorization: Bearer {{passenger_token}}`",
+      "item": [
+        {
+          "name": "Create Booking — Wallet (instant confirm)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.booking) {",
+                  "    pm.collectionVariables.set('booking_id', json.booking.id);",
+                  "    console.log('booking_id saved:', json.booking.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{passenger_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"route_id\": {{route_id}},\n  \"seat_count\": 2,\n  \"pickup_name\": \"Mirpur 10 Metro Station\",\n  \"pickup_lat\": 23.8057,\n  \"pickup_lng\": 90.3668,\n  \"drop_name\": \"Motijheel Bus Stand\",\n  \"drop_lat\": 23.7272,\n  \"drop_lng\": 90.4192,\n  \"payment_method\": \"wallet\",\n  \"passengers\": [\n    { \"name\": \"Alice\",  \"phone\": \"01700000002\", \"gender\": \"female\" },\n    { \"name\": \"Bob\",    \"phone\": \"01700000003\", \"gender\": \"male\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "bookings"]
+            },
+            "description": "Create a booking and pay from customer wallet immediately. Booking is auto-confirmed on success. Fires CarPoolBookingConfirmedEvent. Auto-saves `booking_id`."
+          }
+        },
+        {
+          "name": "Create Booking — Online (returns pending transaction)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.booking) {",
+                  "    pm.collectionVariables.set('booking_id', json.booking.id);",
+                  "    console.log('booking_id saved:', json.booking.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{passenger_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"route_id\": {{route_id}},\n  \"seat_count\": 1,\n  \"pickup_name\": \"Mirpur 10 Metro Station\",\n  \"pickup_lat\": 23.8057,\n  \"pickup_lng\": 90.3668,\n  \"drop_name\": \"Motijheel Bus Stand\",\n  \"drop_lat\": 23.7272,\n  \"drop_lng\": 90.4192,\n  \"payment_method\": \"online\",\n  \"passengers\": [\n    { \"name\": \"Alice\", \"phone\": \"01700000002\", \"gender\": \"female\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "bookings"]
+            },
+            "description": "Create a booking with online payment. Booking starts as `pending_payment`. Response includes `transaction` object with payment details. Pass the transaction to your payment gateway, then call 'Confirm Payment' with the gateway reference. Auto-saves `booking_id`."
+          }
+        },
+        {
+          "name": "List My Bookings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{passenger_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/bookings?status=all&limit=15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "bookings"],
+              "query": [
+                { "key": "status", "value": "all", "description": "Options: pending_payment | confirmed | departed | completed | cancelled | all" },
+                { "key": "limit",  "value": "15",  "description": "Results per page. Default 15" }
+              ]
+            },
+            "description": "Paginated list of the authenticated passenger's bookings with route and driver info."
+          }
+        },
+        {
+          "name": "Get Booking Detail",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{passenger_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/bookings/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "bookings", "{{booking_id}}"]
+            },
+            "description": "Full booking detail: route, driver, named passengers, transaction, review."
+          }
+        },
+        {
+          "name": "Confirm Payment (Online)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{passenger_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gateway_reference\": \"TXN_20260415_ABC123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/bookings/{{booking_id}}/pay",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "bookings", "{{booking_id}}", "pay"]
+            },
+            "description": "Call this after your payment gateway confirms success. Transitions booking to `confirmed`. Fires CarPoolBookingConfirmedEvent."
+          }
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{passenger_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Change of plans\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/bookings/{{booking_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "bookings", "{{booking_id}}", "cancel"]
+            },
+            "description": "Cancel a booking. Only `pending_payment` or `confirmed` bookings can be cancelled. If payment was already made, a refund is issued automatically. Releases seats back to the route."
+          }
+        },
+        {
+          "name": "Submit Review",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{passenger_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Great ride, very punctual driver!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/bookings/{{booking_id}}/review",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "bookings", "{{booking_id}}", "review"]
+            },
+            "description": "Submit a review for a completed ride. Booking must have status `completed`. One review per booking. `rating` must be 1–5. Updates driver's average rating."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "description": "Session-based auth. Set `xsrf_token` and `session` variables from browser cookies after logging in to admin panel.",
+      "item": [
+        {
+          "name": "Drivers",
+          "item": [
+            {
+              "name": "List Drivers",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept",        "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN",  "value": "{{xsrf_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/carpool/drivers?status=active&is_verified=0&search=john&limit=15",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "carpool", "drivers"],
+                  "query": [
+                    { "key": "status",      "value": "active", "description": "Options: active | inactive | suspended" },
+                    { "key": "is_verified", "value": "0",      "description": "0 = unverified, 1 = verified. Omit for all." },
+                    { "key": "search",      "value": "john",   "description": "Search by name, phone, email or vehicle_number" },
+                    { "key": "limit",       "value": "15",     "description": "Results per page. Default 15" }
+                  ]
+                },
+                "description": "Paginated list of all drivers with wallet balance."
+              }
+            },
+            {
+              "name": "Verify Driver",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Accept",        "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN",  "value": "{{xsrf_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/carpool/drivers/{{driver_id}}/verify",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "carpool", "drivers", "{{driver_id}}", "verify"]
+                },
+                "description": "Sets is_verified=true for the driver. Required before the driver can create routes."
+              }
+            },
+            {
+              "name": "Update Driver Status",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type",  "value": "application/json" },
+                  { "key": "Accept",        "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN",  "value": "{{xsrf_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"suspended\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/carpool/drivers/{{driver_id}}/status",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "carpool", "drivers", "{{driver_id}}", "status"]
+                },
+                "description": "Change driver account status. Options: active | inactive | suspended. Suspended drivers cannot login."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Routes",
+          "item": [
+            {
+              "name": "List All Routes",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept",        "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN",  "value": "{{xsrf_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/carpool/routes?status=open&ride_type=scheduled&date_from=2026-04-01&date_to=2026-04-30&search=mirpur&limit=20",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "carpool", "routes"],
+                  "query": [
+                    { "key": "status",    "value": "open",       "description": "Options: open | full | departed | completed | cancelled" },
+                    { "key": "ride_type", "value": "scheduled",  "description": "Options: instant | scheduled" },
+                    { "key": "date_from", "value": "2026-04-01", "description": "Format: Y-m-d" },
+                    { "key": "date_to",   "value": "2026-04-30", "description": "Format: Y-m-d" },
+                    { "key": "search",    "value": "mirpur",     "description": "Search by origin_name or destination_name" },
+                    { "key": "limit",     "value": "20",         "description": "Results per page. Default 15" }
+                  ]
+                },
+                "description": "All routes across all drivers with driver info."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bookings",
+          "item": [
+            {
+              "name": "List All Bookings",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept",        "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN",  "value": "{{xsrf_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/carpool/bookings?status=confirmed&payment_status=paid&date_from=2026-04-01&date_to=2026-04-30&search=BKG-&limit=20",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "carpool", "bookings"],
+                  "query": [
+                    { "key": "status",         "value": "confirmed", "description": "Options: pending_payment | confirmed | departed | completed | cancelled" },
+                    { "key": "payment_status", "value": "paid",      "description": "Options: unpaid | paid | refunded" },
+                    { "key": "date_from",      "value": "2026-04-01","description": "Format: Y-m-d" },
+                    { "key": "date_to",        "value": "2026-04-30","description": "Format: Y-m-d" },
+                    { "key": "search",         "value": "BKG-",      "description": "Search by booking_code" },
+                    { "key": "limit",          "value": "20",        "description": "Results per page. Default 15" }
+                  ]
+                },
+                "description": "All bookings with route, driver, and passenger info."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Commission Report",
+          "item": [
+            {
+              "name": "Get Commission Report",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept",        "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN",  "value": "{{xsrf_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/carpool/commission-report?date_from=2026-04-01&date_to=2026-04-30",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "carpool", "commission-report"],
+                  "query": [
+                    { "key": "date_from", "value": "2026-04-01", "description": "Optional. Format: Y-m-d. Omit for all-time." },
+                    { "key": "date_to",   "value": "2026-04-30", "description": "Optional. Format: Y-m-d. Omit for all-time." }
+                  ]
+                },
+                "description": "Summary report: total_bookings, total_revenue, total_commission (admin earnings), total_driver_paid."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Withdrawals",
+          "item": [
+            {
+              "name": "List Withdrawal Requests",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Accept",        "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN",  "value": "{{xsrf_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/admin/carpool/withdrawals?status=pending&limit=15",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "carpool", "withdrawals"],
+                  "query": [
+                    { "key": "status", "value": "pending", "description": "Options: pending | approved | rejected | paid | all" },
+                    { "key": "limit",  "value": "15",      "description": "Results per page. Default 15" }
+                  ]
+                },
+                "description": "All driver withdrawal requests with driver details."
+              }
+            },
+            {
+              "name": "Approve Withdrawal",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type",  "value": "application/json" },
+                  { "key": "Accept",        "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN",  "value": "{{xsrf_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"note\": \"Processed via bank transfer on 2026-04-10.\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/carpool/withdrawals/{{withdrawal_id}}/approve",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "carpool", "withdrawals", "{{withdrawal_id}}", "approve"]
+                },
+                "description": "Approve and mark withdrawal as paid. Deducts from driver available_balance, increments total_withdrawn, creates withdrawal transaction record, notifies driver via FCM."
+              }
+            },
+            {
+              "name": "Reject Withdrawal",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Content-Type",  "value": "application/json" },
+                  { "key": "Accept",        "value": "application/json" },
+                  { "key": "X-XSRF-TOKEN",  "value": "{{xsrf_token}}" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"note\": \"Account details mismatch. Please resubmit with correct account number.\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{base_url}}/admin/carpool/withdrawals/{{withdrawal_id}}/reject",
+                  "host": ["{{base_url}}"],
+                  "path": ["admin", "carpool", "withdrawals", "{{withdrawal_id}}", "reject"]
+                },
+                "description": "Reject a pending withdrawal request with a reason note. Driver balance is not affected."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
