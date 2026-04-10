@@ -60,6 +60,11 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        'carpool_driver' => [
+            'driver'   => 'passport',
+            'provider' => 'carpool_drivers',
+        ],
     ],
 
     /*
@@ -93,6 +98,11 @@ return [
         'sellers' => [
             'driver' => 'eloquent',
             'model' => \App\Models\Seller::class,
+        ],
+
+        'carpool_drivers' => [
+            'driver' => 'eloquent',
+            'model'  => \App\Models\CarPoolDriver::class,
         ],
 
         // 'users' => [
