@@ -190,7 +190,8 @@ return [
         Maatwebsite\Excel\ExcelServiceProvider::class,
         //Intervention\Image\ImageServiceProvider::class,
         InterfaceServiceProvider::class,
-        ObserverServiceProvider::class
+        ObserverServiceProvider::class,
+        App\Providers\CarPoolServiceProvider::class,
     ],
 
     /*
