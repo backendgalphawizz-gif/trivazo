@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\CarPoolBookingStatus;
 use App\Traits\CacheManagerTrait;
+use App\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,6 +20,7 @@ class CarPoolBooking extends Model
     protected $fillable = [
         'route_id',
         'passenger_id',
+        'user_id',
         'pickup_name',
         'pickup_lat',
         'pickup_lng',
@@ -29,6 +31,8 @@ class CarPoolBooking extends Model
         'booking_code',
         'status',
         'fare_total',
+        'tax_amount',
+        'final_amount',
         'admin_commission_amount',
         'driver_amount',
         'payment_method',
@@ -51,6 +55,8 @@ class CarPoolBooking extends Model
         'drop_lng'                => 'float',
         'seat_count'              => 'integer',
         'fare_total'              => 'float',
+        'tax_amount'              => 'float',
+        'final_amount'            => 'float',
         'admin_commission_amount' => 'float',
         'driver_amount'           => 'float',
         'confirmed_at'            => 'datetime',
@@ -68,7 +74,7 @@ class CarPoolBooking extends Model
 
     public function passenger(): BelongsTo
     {
-        return $this->belongsTo(Customer::class, 'passenger_id');
+        return $this->belongsTo(User::class, 'passenger_id');
     }
 
     public function passengers(): HasMany
@@ -114,11 +120,11 @@ class CarPoolBooking extends Model
         parent::boot();
 
         static::saved(function () {
-            CacheManagerTrait::cacheRemoveByType(type: 'carpool_bookings');
+            cacheRemoveByType(type: 'carpool_bookings');
         });
 
         static::deleted(function () {
-            CacheManagerTrait::cacheRemoveByType(type: 'carpool_bookings');
+            cacheRemoveByType(type: 'carpool_bookings');
         });
     }
 }

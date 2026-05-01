@@ -3,20 +3,19 @@
 namespace App\Http\Controllers\Vendor\Auth;
 
 use App\Contracts\Repositories\VendorRepositoryInterface;
-use App\Enums\SessionKey;
 use App\Enums\ViewPaths\Vendor\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Vendor\LoginRequest;
 use App\Repositories\VendorWalletRepository;
+use App\Enums\SessionKey;
 use App\Services\VendorService;
+use App\Support\SimpleSvgCaptcha;
 use App\Traits\RecaptchaTrait;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Contracts\View\View;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
 
 class LoginController extends Controller
 {
@@ -32,6 +31,9 @@ class LoginController extends Controller
         $this->middleware('guest:seller', ['except' => ['logout']]);
     }
 
+    /**
+     * Image captcha for seller registration (theme forms), not used on vendor login.
+     */
     public function generateReCaptcha(): void
     {
         $recaptchaBuilder = $this->generateDefaultReCaptcha(4);
@@ -39,43 +41,18 @@ class LoginController extends Controller
             Session::forget(SessionKey::VENDOR_RECAPTCHA_KEY);
         }
         Session::put(SessionKey::VENDOR_RECAPTCHA_KEY, $recaptchaBuilder->getPhrase());
-        header("Cache-Control: no-cache, must-revalidate");
-        header("Content-Type:image/jpeg");
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Content-Type: '.($recaptchaBuilder instanceof SimpleSvgCaptcha ? 'image/svg+xml' : 'image/jpeg'));
         $recaptchaBuilder->output();
     }
 
     public function getLoginView(): View
     {
-        $recaptchaBuilder = $this->generateDefaultReCaptcha(4);
-        $recaptcha = getWebConfig(name: 'recaptcha');
-        Session::put(SessionKey::VENDOR_RECAPTCHA_KEY, $recaptchaBuilder->getPhrase());
-        return view(Auth::VENDOR_LOGIN[VIEW], compact('recaptchaBuilder', 'recaptcha'));
+        return view(Auth::VENDOR_LOGIN[VIEW]);
     }
 
     public function login(LoginRequest $request): RedirectResponse
     {
-        $recaptcha = getWebConfig(name: 'recaptcha');
-        if (isset($recaptcha) && $recaptcha['status'] == 1) {
-            $request->validate([
-                'g-recaptcha-response' => [
-                    function ($attribute, $value, $fail) {
-                        $secret_key = getWebConfig(name: 'recaptcha')['secret_key'];
-                        $response = $value;
-                        $url = 'https://www.google.com/recaptcha/api/siteverify?secret=' . $secret_key . '&response=' . $response;
-                        $response = Http::get($url);
-                        $response = $response->json();
-                        if (!isset($response['success']) || !$response['success']) {
-                            $fail(translate('recaptcha_failed'));
-                        }
-                    },
-                ],
-            ]);
-        } else {
-            if ($recaptcha['status'] != 1 && strtolower($request->vendorRecaptchaKey) != strtolower(Session(SessionKey::VENDOR_RECAPTCHA_KEY))) {
-                Toastr::error(translate('ReCAPTCHA_Failed'));
-                return back();
-            }
-        }
         $vendor = $this->vendorRepo->getFirstWhere(['identity' => $request['email']]);
         if (!$vendor) {
             Toastr::error(translate('credentials_doesnt_match') . '!');

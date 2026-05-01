@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Support\SimpleSvgCaptcha;
 use Gregwar\Captcha\CaptchaBuilder;
 use Gregwar\Captcha\PhraseBuilder;
 use Illuminate\Support\Facades\Session;
@@ -19,16 +20,22 @@ trait RecaptchaTrait
         return false;
     }
 
-    public function generateDefaultReCaptcha(int $captureLength): CaptchaBuilder
+    public function generateDefaultReCaptcha(int $captureLength): CaptchaBuilder|SimpleSvgCaptcha
     {
         $phrase = new PhraseBuilder;
         $code = $phrase->build($captureLength);
+
+        if (!extension_loaded('gd')) {
+            return new SimpleSvgCaptcha($code);
+        }
+
         $builder = new CaptchaBuilder($code, $phrase);
         $builder->setBackgroundColor(220, 210, 230);
         $builder->setMaxAngle(25);
         $builder->setMaxBehindLines(0);
         $builder->setMaxFrontLines(0);
         $builder->build($width = 100, $height = 40, $font = null);
+
         return $builder;
     }
 

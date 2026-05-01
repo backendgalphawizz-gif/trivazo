@@ -1,0 +1,1331 @@
+{
+  "info": {
+    "name": "Trivazo — Full User/Customer API v1",
+    "_postman_id": "trivazo-user-api-v1-full",
+    "description": "Complete user/customer-side REST API for Trivazo.\nBase URL: {{base_url}}/api/v1\n\nSetup:\n1. Set 'base_url' = http://localhost:8000 in your environment\n2. Use Auth > Login to auto-save token\n3. All protected endpoints use: Authorization: Bearer {{auth_token}}",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",    "value": "http://localhost:8000", "type": "string" },
+    { "key": "auth_token",  "value": "",  "type": "string" },
+    { "key": "guest_id",    "value": "",  "type": "string" },
+    { "key": "product_slug","value": "sample-product", "type": "string" },
+    { "key": "product_id",  "value": "1", "type": "string" },
+    { "key": "order_id",    "value": "1", "type": "string" },
+    { "key": "cart_group_id","value": "", "type": "string" },
+    { "key": "address_id",  "value": "1", "type": "string" },
+    { "key": "seller_id",   "value": "1", "type": "string" },
+    { "key": "category_id", "value": "1", "type": "string" },
+    { "key": "brand_id",    "value": "1", "type": "string" },
+    { "key": "ticket_id",   "value": "1", "type": "string" },
+    { "key": "route_id",    "value": "1", "type": "string" },
+    { "key": "booking_id",  "value": "1", "type": "string" },
+    { "key": "driver_id",   "value": "1", "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "01 — Auth",
+      "description": "User registration, login, OTP verification, forgot password, social login.",
+      "item": [
+
+        {
+          "name": "Get Guest ID",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const res = pm.response.json();",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "if (res.guest_id) pm.collectionVariables.set('guest_id', res.guest_id);"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/get-guest-id", "host": ["{{base_url}}"], "path": ["api","v1","get-guest-id"] }
+          }
+        },
+
+        {
+          "name": "Register",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const res = pm.response.json();",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "if (res.token) { pm.collectionVariables.set('auth_token', res.token); pm.test('Has token', () => pm.expect(res.token).to.be.a('string')); }"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"f_name\": \"John\",\n  \"l_name\": \"Doe\",\n  \"phone\": \"+919876543210\",\n  \"email\": \"john@example.com\",\n  \"password\": \"Password@123\",\n  \"referral_code\": \"\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/register", "host": ["{{base_url}}"], "path": ["api","v1","auth","register"] }
+          }
+        },
+
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const res = pm.response.json();",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Has token', () => pm.expect(res.token).to.be.a('string'));",
+            "if (res.token) { pm.collectionVariables.set('auth_token', res.token); console.log('Token saved'); }"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email_or_phone\": \"+919876543210\",\n  \"password\": \"Password@123\",\n  \"guest_id\": \"{{guest_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/login", "host": ["{{base_url}}"], "path": ["api","v1","auth","login"] }
+          }
+        },
+
+        {
+          "name": "Logout",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/auth/logout", "host": ["{{base_url}}"], "path": ["api","v1","auth","logout"] }
+          }
+        },
+
+        {
+          "name": "Check Email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"john@example.com\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/check-email", "host": ["{{base_url}}"], "path": ["api","v1","auth","check-email"] }
+          }
+        },
+
+        {
+          "name": "Check Phone",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"phone\": \"+919876543210\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/check-phone", "host": ["{{base_url}}"], "path": ["api","v1","auth","check-phone"] }
+          }
+        },
+
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"temporary_token\": \"TOKEN_HERE\",\n  \"otp\": \"12345\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/verify-otp", "host": ["{{base_url}}"], "path": ["api","v1","auth","verify-otp"] }
+          }
+        },
+
+        {
+          "name": "Resend OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"temporary_token\": \"TOKEN_HERE\",\n  \"identity\": \"+919876543210\",\n  \"type\": \"phone\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/resend-otp", "host": ["{{base_url}}"], "path": ["api","v1","auth","resend-otp"] }
+          }
+        },
+
+        {
+          "name": "Forgot Password — Request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email_or_phone\": \"+919876543210\",\n  \"type\": \"phone\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/forgot-password", "host": ["{{base_url}}"], "path": ["api","v1","auth","forgot-password"] }
+          }
+        },
+
+        {
+          "name": "Forgot Password — Verify Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identity\": \"+919876543210\",\n  \"type\": \"phone\",\n  \"token\": \"12345\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/verify-token", "host": ["{{base_url}}"], "path": ["api","v1","auth","verify-token"] }
+          }
+        },
+
+        {
+          "name": "Forgot Password — Reset",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"identity\": \"+919876543210\",\n  \"type\": \"phone\",\n  \"otp\": \"12345\",\n  \"password\": \"NewPassword@123\",\n  \"password_confirmation\": \"NewPassword@123\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/reset-password", "host": ["{{base_url}}"], "path": ["api","v1","auth","reset-password"] }
+          }
+        },
+
+        {
+          "name": "Social Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"GOOGLE_OR_FACEBOOK_TOKEN\",\n  \"unique_id\": \"UID123\",\n  \"email\": \"john@example.com\",\n  \"medium\": \"google\",\n  \"name\": \"John Doe\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/auth/social-login", "host": ["{{base_url}}"], "path": ["api","v1","auth","social-login"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "02 — Config",
+      "item": [
+        {
+          "name": "Get App Config",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/config", "host": ["{{base_url}}"], "path": ["api","v1","config"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "03 — Customer Profile",
+      "description": "All protected. Requires Authorization: Bearer {{auth_token}}",
+      "item": [
+
+        {
+          "name": "Get My Info",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const res = pm.response.json();",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Has id', () => pm.expect(res.id).to.be.a('number'));",
+            "pm.test('Has name', () => pm.expect(res.name).to.be.a('string'));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/info", "host": ["{{base_url}}"], "path": ["api","v1","customer","info"] }
+          }
+        },
+
+        {
+          "name": "Update Profile",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "f_name", "value": "John", "type": "text" },
+                { "key": "l_name", "value": "Doe", "type": "text" },
+                { "key": "email", "value": "john@example.com", "type": "text" },
+                { "key": "phone", "value": "+919876543210", "type": "text" },
+                { "key": "image", "type": "file", "src": "", "disabled": true }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/api/v1/customer/update-profile", "host": ["{{base_url}}"], "path": ["api","v1","customer","update-profile"] }
+          }
+        },
+
+        {
+          "name": "Language Change",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"language_code\": \"en\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/customer/language-change", "host": ["{{base_url}}"], "path": ["api","v1","customer","language-change"] }
+          }
+        },
+
+        {
+          "name": "Update FCM Token",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"cm_firebase_token\": \"FCM_DEVICE_TOKEN_HERE\",\n  \"guest_id\": \"{{guest_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/customer/cm-firebase-token", "host": ["{{base_url}}"], "path": ["api","v1","customer","cm-firebase-token"] }
+          }
+        },
+
+        {
+          "name": "Delete Account",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/account-delete/1", "host": ["{{base_url}}"], "path": ["api","v1","customer","account-delete","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "04 — Addresses",
+      "description": "Shipping address management (auth:api).",
+      "item": [
+
+        {
+          "name": "List Addresses",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const res = pm.response.json();",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Is array', () => pm.expect(res).to.be.an('array'));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/address/list", "host": ["{{base_url}}"], "path": ["api","v1","customer","address","list"] }
+          }
+        },
+
+        {
+          "name": "Add Address",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const res = pm.response.json();",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "if (res.id) pm.collectionVariables.set('address_id', res.id);"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"contact_person_name\": \"John Doe\",\n  \"address_type\": \"home\",\n  \"phone\": \"+919876543210\",\n  \"email\": \"john@example.com\",\n  \"address\": \"123 MG Road\",\n  \"city\": \"Mumbai\",\n  \"zip\": \"400001\",\n  \"country\": \"India\",\n  \"latitude\": \"19.0760\",\n  \"longitude\": \"72.8777\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/customer/address/add", "host": ["{{base_url}}"], "path": ["api","v1","customer","address","add"] }
+          }
+        },
+
+        {
+          "name": "Get Address by ID",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/address/get/{{address_id}}", "host": ["{{base_url}}"], "path": ["api","v1","customer","address","get","{{address_id}}"] }
+          }
+        },
+
+        {
+          "name": "Update Address",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"{{address_id}}\",\n  \"contact_person_name\": \"John Doe\",\n  \"address_type\": \"office\",\n  \"phone\": \"+919876543210\",\n  \"address\": \"456 Linking Road\",\n  \"city\": \"Mumbai\",\n  \"zip\": \"400050\",\n  \"country\": \"India\",\n  \"latitude\": \"19.0596\",\n  \"longitude\": \"72.8295\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/customer/address/update", "host": ["{{base_url}}"], "path": ["api","v1","customer","address","update"] }
+          }
+        },
+
+        {
+          "name": "Delete Address",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "DELETE",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"address_id\": \"{{address_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/customer/address", "host": ["{{base_url}}"], "path": ["api","v1","customer","address"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "05 — Products",
+      "item": [
+
+        {
+          "name": "Latest Products",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/products/latest?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","products","latest"], "query": [{ "key": "limit", "value": "10" }, { "key": "offset", "value": "1" }] }
+          }
+        },
+
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/products/search?name=phone&limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","products","search"], "query": [{ "key": "name", "value": "phone" }, { "key": "limit", "value": "10" }, { "key": "offset", "value": "1" }] }
+          }
+        },
+
+        {
+          "name": "Product Details",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const res = pm.response.json();",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Has product', () => pm.expect(res).to.be.an('object'));",
+            "if (res.id) pm.collectionVariables.set('product_id', res.id);"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/products/details/{{product_slug}}", "host": ["{{base_url}}"], "path": ["api","v1","products","details","{{product_slug}}"] }
+          }
+        },
+
+        {
+          "name": "Product Reviews",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/products/reviews/{{product_id}}?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","products","reviews","{{product_id}}"] }
+          }
+        },
+
+        {
+          "name": "Submit Product Review",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "product_id", "value": "{{product_id}}", "type": "text" },
+                { "key": "order_id", "value": "{{order_id}}", "type": "text" },
+                { "key": "comment", "value": "Great product!", "type": "text" },
+                { "key": "rating", "value": "5", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/api/v1/products/reviews/submit", "host": ["{{base_url}}"], "path": ["api","v1","products","reviews","submit"] }
+          }
+        },
+
+        {
+          "name": "Featured Products",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/products/featured?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","products","featured"] }
+          }
+        },
+
+        {
+          "name": "Best Selling",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/products/best-sellings?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","products","best-sellings"] }
+          }
+        },
+
+        {
+          "name": "Top Rated",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/products/top-rated?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","products","top-rated"] }
+          }
+        },
+
+        {
+          "name": "Related Products",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/products/related-products/{{product_id}}", "host": ["{{base_url}}"], "path": ["api","v1","products","related-products","{{product_id}}"] }
+          }
+        },
+
+        {
+          "name": "New Arrival",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/products/new-arrival?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","products","new-arrival"] }
+          }
+        },
+
+        {
+          "name": "Discounted Products",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/products/discounted-product?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","products","discounted-product"] }
+          }
+        },
+
+        {
+          "name": "Home Categories",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/products/home-categories", "host": ["{{base_url}}"], "path": ["api","v1","products","home-categories"] }
+          }
+        },
+
+        {
+          "name": "Just For You",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/products/just-for-you?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","products","just-for-you"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "06 — Categories",
+      "item": [
+        {
+          "name": "All Categories",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/categories?limit=50&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","categories"] }
+          }
+        },
+        {
+          "name": "Products by Category",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/categories/products/{{category_id}}?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","categories","products","{{category_id}}"] }
+          }
+        },
+        {
+          "name": "Find What You Need",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/categories/find-what-you-need", "host": ["{{base_url}}"], "path": ["api","v1","categories","find-what-you-need"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "07 — Brands",
+      "item": [
+        {
+          "name": "All Brands",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/brands?limit=50&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","brands"] }
+          }
+        },
+        {
+          "name": "Products by Brand",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/brands/products/{{brand_id}}?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","brands","products","{{brand_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "08 — Sellers",
+      "item": [
+        {
+          "name": "Seller Info",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/seller?seller_id={{seller_id}}", "host": ["{{base_url}}"], "path": ["api","v1","seller"], "query": [{ "key": "seller_id", "value": "{{seller_id}}" }] }
+          }
+        },
+        {
+          "name": "Seller List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/seller/list/all?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","seller","list","all"] }
+          }
+        },
+        {
+          "name": "Seller Products",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/seller/{{seller_id}}/products?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","seller","{{seller_id}}","products"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "09 — Banners",
+      "item": [
+        {
+          "name": "Get Banners",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/banners", "host": ["{{base_url}}"], "path": ["api","v1","banners"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "10 — Flash Deals & Offers",
+      "item": [
+        {
+          "name": "Flash Deals",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/flash-deals", "host": ["{{base_url}}"], "path": ["api","v1","flash-deals"] }
+          }
+        },
+        {
+          "name": "Flash Deal Products",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/flash-deals/products/1", "host": ["{{base_url}}"], "path": ["api","v1","flash-deals","products","1"] }
+          }
+        },
+        {
+          "name": "Featured Deals",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/deals/featured", "host": ["{{base_url}}"], "path": ["api","v1","deals","featured"] }
+          }
+        },
+        {
+          "name": "Deal of the Day",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/dealsoftheday/deal-of-the-day", "host": ["{{base_url}}"], "path": ["api","v1","dealsoftheday","deal-of-the-day"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "11 — Cart",
+      "item": [
+
+        {
+          "name": "Get Cart",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const res = pm.response.json();",
+            "if (Array.isArray(res) && res.length > 0 && res[0].cart_group_id) {",
+            "  pm.collectionVariables.set('cart_group_id', res[0].cart_group_id);",
+            "}"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/cart?guest_id={{guest_id}}", "host": ["{{base_url}}"], "path": ["api","v1","cart"] }
+          }
+        },
+
+        {
+          "name": "Add to Cart",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200 or 201', () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"id\": \"{{product_id}}\",\n  \"quantity\": 1,\n  \"color\": null,\n  \"variations\": [],\n  \"variant\": \"\",\n  \"guest_id\": \"{{guest_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/cart/add", "host": ["{{base_url}}"], "path": ["api","v1","cart","add"] }
+          }
+        },
+
+        {
+          "name": "Update Cart",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"key\": \"CART_ITEM_KEY\",\n  \"quantity\": 2\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/cart/update", "host": ["{{base_url}}"], "path": ["api","v1","cart","update"] }
+          }
+        },
+
+        {
+          "name": "Remove from Cart",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "DELETE",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"key\": \"CART_ITEM_KEY\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/cart/remove", "host": ["{{base_url}}"], "path": ["api","v1","cart","remove"] }
+          }
+        },
+
+        {
+          "name": "Remove All from Cart",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/cart/remove-all", "host": ["{{base_url}}"], "path": ["api","v1","cart","remove-all"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "12 — Shipping",
+      "item": [
+        {
+          "name": "Shipping Methods by Seller",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/shipping-method/by-seller/{{seller_id}}/seller?guest_id={{guest_id}}", "host": ["{{base_url}}"], "path": ["api","v1","shipping-method","by-seller","{{seller_id}}","seller"] }
+          }
+        },
+        {
+          "name": "Choose Shipping for Order",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"cart_group_id\": \"{{cart_group_id}}\",\n  \"shipping_method_id\": 1\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/shipping-method/choose-for-order", "host": ["{{base_url}}"], "path": ["api","v1","shipping-method","choose-for-order"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "13 — Orders",
+      "item": [
+
+        {
+          "name": "Place Order",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const res = pm.response.json();",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "if (res.order_id) pm.collectionVariables.set('order_id', res.order_id);"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/customer/order/place?payment_method=cash_on_delivery&address_id={{address_id}}&cart_group_id[]={{cart_group_id}}",
+              "host": ["{{base_url}}"], "path": ["api","v1","customer","order","place"],
+              "query": [
+                { "key": "payment_method", "value": "cash_on_delivery" },
+                { "key": "address_id", "value": "{{address_id}}" },
+                { "key": "cart_group_id[]", "value": "{{cart_group_id}}" }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "My Order List",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "const res = pm.response.json();",
+            "if (res.orders && res.orders.length > 0) pm.collectionVariables.set('order_id', res.orders[0].id);"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/order/list?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","customer","order","list"] }
+          }
+        },
+
+        {
+          "name": "Order Details",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/order/details?order_id={{order_id}}", "host": ["{{base_url}}"], "path": ["api","v1","customer","order","details"], "query": [{ "key": "order_id", "value": "{{order_id}}" }] }
+          }
+        },
+
+        {
+          "name": "Track Order",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/order/track?order_id={{order_id}}", "host": ["{{base_url}}"], "path": ["api","v1","order","track"], "query": [{ "key": "order_id", "value": "{{order_id}}" }] }
+          }
+        },
+
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/order/cancel-order?order_id={{order_id}}", "host": ["{{base_url}}"], "path": ["api","v1","order","cancel-order"], "query": [{ "key": "order_id", "value": "{{order_id}}" }] }
+          }
+        },
+
+        {
+          "name": "Refund Request",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/order/refund?order_id={{order_id}}&order_detail_id=1", "host": ["{{base_url}}"], "path": ["api","v1","customer","order","refund"] }
+          }
+        },
+
+        {
+          "name": "Store Refund",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"order_id\": \"{{order_id}}\",\n  \"order_detail_id\": 1,\n  \"refund_reason\": \"Item not as described\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/customer/order/refund-store", "host": ["{{base_url}}"], "path": ["api","v1","customer","order","refund-store"] }
+          }
+        },
+
+        {
+          "name": "Generate Invoice",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/order/generate-invoice?order_id={{order_id}}", "host": ["{{base_url}}"], "path": ["api","v1","customer","order","generate-invoice"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "14 — Wishlist",
+      "item": [
+        {
+          "name": "Get Wishlist",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/wish-list?limit=15&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","customer","wish-list"] }
+          }
+        },
+        {
+          "name": "Add to Wishlist",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"product_id\": \"{{product_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/customer/wish-list/add", "host": ["{{base_url}}"], "path": ["api","v1","customer","wish-list","add"] }
+          }
+        },
+        {
+          "name": "Remove from Wishlist",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "DELETE",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"product_id\": \"{{product_id}}\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/customer/wish-list/remove", "host": ["{{base_url}}"], "path": ["api","v1","customer","wish-list","remove"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "15 — Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{auth_token}}" }],
+            "url": { "raw": "{{base_url}}/api/v1/notifications?limit=20&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","notifications"] }
+          }
+        },
+        {
+          "name": "Mark Seen",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/notifications/seen", "host": ["{{base_url}}"], "path": ["api","v1","notifications","seen"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "16 — Support Tickets",
+      "item": [
+        {
+          "name": "Create Ticket",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "subject", "value": "Order not delivered", "type": "text" },
+                { "key": "type", "value": "order_issue", "type": "text" },
+                { "key": "description", "value": "My order #123 has not been delivered yet.", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/api/v1/customer/support-ticket/create", "host": ["{{base_url}}"], "path": ["api","v1","customer","support-ticket","create"] }
+          }
+        },
+        {
+          "name": "Get Tickets",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/support-ticket/get", "host": ["{{base_url}}"], "path": ["api","v1","customer","support-ticket","get"] }
+          }
+        },
+        {
+          "name": "Get Ticket Conversation",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/support-ticket/conv/{{ticket_id}}", "host": ["{{base_url}}"], "path": ["api","v1","customer","support-ticket","conv","{{ticket_id}}"] }
+          }
+        },
+        {
+          "name": "Reply to Ticket",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "formdata", "formdata": [{ "key": "reply", "value": "Please update me on the status.", "type": "text" }] },
+            "url": { "raw": "{{base_url}}/api/v1/customer/support-ticket/reply/{{ticket_id}}", "host": ["{{base_url}}"], "path": ["api","v1","customer","support-ticket","reply","{{ticket_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "17 — Wallet",
+      "item": [
+        {
+          "name": "Wallet Transactions",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/wallet/list?limit=15&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","customer","wallet","list"] }
+          }
+        },
+        {
+          "name": "Wallet Bonus List",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/wallet/bonus-list?limit=15&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","customer","wallet","bonus-list"] }
+          }
+        },
+        {
+          "name": "Add to Fund (Top Up)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 500,\n  \"payment_method\": \"online\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/add-to-fund", "host": ["{{base_url}}"], "path": ["api","v1","add-to-fund"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "18 — Loyalty Points",
+      "item": [
+        {
+          "name": "Loyalty Points List",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/loyalty/list?limit=15&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","customer","loyalty","list"] }
+          }
+        },
+        {
+          "name": "Exchange Loyalty to Currency",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"point\": 100\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/customer/loyalty/loyalty-exchange-currency", "host": ["{{base_url}}"], "path": ["api","v1","customer","loyalty","loyalty-exchange-currency"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "19 — Coupons",
+      "item": [
+        {
+          "name": "My Coupon List",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/coupon/list", "host": ["{{base_url}}"], "path": ["api","v1","coupon","list"] }
+          }
+        },
+        {
+          "name": "Applicable Coupons",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/coupon/applicable-list?cart_group_id={{cart_group_id}}", "host": ["{{base_url}}"], "path": ["api","v1","coupon","applicable-list"] }
+          }
+        },
+        {
+          "name": "Apply Coupon",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/coupon/apply?code=SAVE10&cart_group_id={{cart_group_id}}", "host": ["{{base_url}}"], "path": ["api","v1","coupon","apply"], "query": [{ "key": "code", "value": "SAVE10" }, { "key": "cart_group_id", "value": "{{cart_group_id}}" }] }
+          }
+        },
+        {
+          "name": "Seller-wise Coupons",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/coupons/{{seller_id}}/seller-wise-coupons", "host": ["{{base_url}}"], "path": ["api","v1","coupons","{{seller_id}}","seller-wise-coupons"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "20 — Chat",
+      "description": "Chat with sellers and delivery men. Requires auth:api.",
+      "item": [
+        {
+          "name": "Chat List (seller)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/chat/list/seller", "host": ["{{base_url}}"], "path": ["api","v1","customer","chat","list","seller"] }
+          }
+        },
+        {
+          "name": "Get Messages (seller)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/chat/get-messages/seller/{{seller_id}}", "host": ["{{base_url}}"], "path": ["api","v1","customer","chat","get-messages","seller","{{seller_id}}"] }
+          }
+        },
+        {
+          "name": "Send Message (seller)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "id", "value": "{{seller_id}}", "type": "text" },
+                { "key": "message", "value": "Hello, is this product available?", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{base_url}}/api/v1/customer/chat/send-message/seller", "host": ["{{base_url}}"], "path": ["api","v1","customer","chat","send-message","seller"] }
+          }
+        },
+        {
+          "name": "Chat List (delivery_man)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/customer/chat/list/delivery_man", "host": ["{{base_url}}"], "path": ["api","v1","customer","chat","list","delivery_man"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "21 — Hotels",
+      "item": [
+        {
+          "name": "Hotel Filter Options",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/hotels/filters", "host": ["{{base_url}}"], "path": ["api","v1","hotels","filters"] }
+          }
+        },
+        {
+          "name": "Hotel List",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/hotels?limit=10&offset=1", "host": ["{{base_url}}"], "path": ["api","v1","hotels"] }
+          }
+        },
+        {
+          "name": "Hotel Details",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/hotels/1", "host": ["{{base_url}}"], "path": ["api","v1","hotels","1"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "22 — Map API",
+      "item": [
+        {
+          "name": "Place Autocomplete",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/mapapi/place-api-autocomplete?search_text=Mumbai", "host": ["{{base_url}}"], "path": ["api","v1","mapapi","place-api-autocomplete"], "query": [{ "key": "search_text", "value": "Mumbai" }] }
+          }
+        },
+        {
+          "name": "Distance API",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/mapapi/distance-api?origin_lat=19.0760&origin_lng=72.8777&destination_lat=18.5204&destination_lng=73.8567", "host": ["{{base_url}}"], "path": ["api","v1","mapapi","distance-api"] }
+          }
+        },
+        {
+          "name": "Geocode API",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/mapapi/geocode-api?lat=19.0760&lng=72.8777", "host": ["{{base_url}}"], "path": ["api","v1","mapapi","geocode-api"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "23 — Misc",
+      "item": [
+        {
+          "name": "FAQ",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/faq", "host": ["{{base_url}}"], "path": ["api","v1","faq"] }
+          }
+        },
+        {
+          "name": "Contact Us",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"subject\": \"Query about order\",\n  \"message\": \"I want to know about my order status.\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/contact-us", "host": ["{{base_url}}"], "path": ["api","v1","contact-us"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "24 — CarPool (Passenger)",
+      "description": "Complete CarPool user API. Public + auth:api protected routes.",
+      "item": [
+
+        {
+          "name": "Search Available Trips",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const res = pm.response.json();",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+            "if (res.routes && res.routes.data && res.routes.data.length > 0) {",
+            "  pm.collectionVariables.set('route_id', res.routes.data[0].id);",
+            "}"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/routes/search?origin_lat=19.0760&origin_lng=72.8777&destination_lat=18.5204&destination_lng=73.8567&date=2026-04-15&seats=1&radius_km=5",
+              "host": ["{{base_url}}"], "path": ["api","v1","carpool","routes","search"],
+              "query": [
+                { "key": "origin_lat", "value": "19.0760" },
+                { "key": "origin_lng", "value": "72.8777" },
+                { "key": "destination_lat", "value": "18.5204" },
+                { "key": "destination_lng", "value": "73.8567" },
+                { "key": "date", "value": "2026-04-15" },
+                { "key": "seats", "value": "1" },
+                { "key": "radius_km", "value": "5" }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "Get Trip Detail",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/carpool/routes/{{route_id}}", "host": ["{{base_url}}"], "path": ["api","v1","carpool","routes","{{route_id}}"] }
+          }
+        },
+
+        {
+          "name": "Driver Public Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/carpool/driver/{{driver_id}}/profile", "host": ["{{base_url}}"], "path": ["api","v1","carpool","driver","{{driver_id}}","profile"] }
+          }
+        },
+
+        {
+          "name": "My CarPool Profile",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/carpool/passenger/profile", "host": ["{{base_url}}"], "path": ["api","v1","carpool","passenger","profile"] }
+          }
+        },
+
+        {
+          "name": "Active Ride",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const res = pm.response.json();",
+            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+            "if (res.active_ride) pm.collectionVariables.set('booking_id', res.active_ride.id);"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/carpool/passenger/active", "host": ["{{base_url}}"], "path": ["api","v1","carpool","passenger","active"] }
+          }
+        },
+
+        {
+          "name": "My Bookings",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/bookings?status=all&limit=15",
+              "host": ["{{base_url}}"], "path": ["api","v1","carpool","passenger","bookings"],
+              "query": [{ "key": "status", "value": "all", "description": "all|pending_payment|confirmed|departed|completed|cancelled" }, { "key": "limit", "value": "15" }]
+            }
+          }
+        },
+
+        {
+          "name": "Create Booking",
+          "event": [{ "listen": "test", "script": { "exec": [
+            "const res = pm.response.json();",
+            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+            "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+            "if (res.booking) pm.collectionVariables.set('booking_id', res.booking.id);"
+          ], "type": "text/javascript" } }],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"route_id\": {{route_id}},\n  \"seat_count\": 1,\n  \"pickup_name\": \"Mumbai Central\",\n  \"pickup_lat\": 18.9691,\n  \"pickup_lng\": 72.8194,\n  \"drop_name\": \"Pune Station\",\n  \"drop_lat\": 18.5279,\n  \"drop_lng\": 73.8742,\n  \"payment_method\": \"wallet\",\n  \"passengers\": [\n    { \"name\": \"John Doe\", \"phone\": \"+919876543210\", \"gender\": \"male\" }\n  ]\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/carpool/passenger/bookings", "host": ["{{base_url}}"], "path": ["api","v1","carpool","passenger","bookings"] }
+          }
+        },
+
+        {
+          "name": "Booking Detail",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/carpool/passenger/bookings/{{booking_id}}", "host": ["{{base_url}}"], "path": ["api","v1","carpool","passenger","bookings","{{booking_id}}"] }
+          }
+        },
+
+        {
+          "name": "Pay for Booking",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"gateway_reference\": \"PAY_REF_123456789\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/carpool/passenger/bookings/{{booking_id}}/pay", "host": ["{{base_url}}"], "path": ["api","v1","carpool","passenger","bookings","{{booking_id}}","pay"] }
+          }
+        },
+
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Change of plans\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/carpool/passenger/bookings/{{booking_id}}/cancel", "host": ["{{base_url}}"], "path": ["api","v1","carpool","passenger","bookings","{{booking_id}}","cancel"] }
+          }
+        },
+
+        {
+          "name": "Submit Review",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Excellent ride, very punctual!\"\n}" },
+            "url": { "raw": "{{base_url}}/api/v1/carpool/passenger/bookings/{{booking_id}}/review", "host": ["{{base_url}}"], "path": ["api","v1","carpool","passenger","bookings","{{booking_id}}","review"] }
+          }
+        },
+
+        {
+          "name": "My Reviews",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/carpool/passenger/reviews", "host": ["{{base_url}}"], "path": ["api","v1","carpool","passenger","reviews"] }
+          }
+        },
+
+        {
+          "name": "Track Ride (Full)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/carpool/passenger/track/{{booking_id}}", "host": ["{{base_url}}"], "path": ["api","v1","carpool","passenger","track","{{booking_id}}"] }
+          }
+        },
+
+        {
+          "name": "Driver Location (Polling)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{auth_token}}" }] },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/v1/carpool/passenger/track/{{booking_id}}/location", "host": ["{{base_url}}"], "path": ["api","v1","carpool","passenger","track","{{booking_id}}","location"] }
+          }
+        }
+      ]
+    }
+
+  ]
+}

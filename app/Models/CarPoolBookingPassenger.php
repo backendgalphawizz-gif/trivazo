@@ -11,15 +11,19 @@ class CarPoolBookingPassenger extends Model
 
     protected $fillable = [
         'booking_id',
+        'saved_passenger_id',
         'name',
         'phone',
         'gender',
+        'age',
     ];
 
     protected $casts = [
-        'booking_id' => 'integer',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'booking_id'          => 'integer',
+        'saved_passenger_id'  => 'integer',
+        'age'                 => 'integer',
+        'created_at'          => 'datetime',
+        'updated_at'          => 'datetime',
     ];
 
     public function booking(): BelongsTo

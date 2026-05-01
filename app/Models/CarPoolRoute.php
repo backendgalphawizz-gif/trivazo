@@ -119,11 +119,11 @@ class CarPoolRoute extends Model
         parent::boot();
 
         static::saved(function () {
-            CacheManagerTrait::cacheRemoveByType(type: 'carpool_routes');
+            cacheRemoveByType(type: 'carpool_routes');
         });
 
         static::deleted(function () {
-            CacheManagerTrait::cacheRemoveByType(type: 'carpool_routes');
+            cacheRemoveByType(type: 'carpool_routes');
         });
     }
 }

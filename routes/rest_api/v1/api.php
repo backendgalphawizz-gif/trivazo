@@ -396,4 +396,7 @@ Route::group(['namespace' => 'RestAPI\v1', 'prefix' => 'v1', 'middleware' => ['a
 
     Route::post('contact-us', 'GeneralController@contact_store');
     Route::put('customer/language-change', 'CustomerController@language_change')->middleware('auth:api');
+
+    // CarPool APIs (passenger + driver)
+    require __DIR__ . '/carpool.php';
 });

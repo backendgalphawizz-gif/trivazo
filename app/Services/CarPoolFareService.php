@@ -15,6 +15,28 @@ class CarPoolFareService
     }
 
     /**
+     * Calculate tax amount on a subtotal.
+     * Returns ['tax_percentage' => float, 'tax_amount' => float, 'grand_total' => float].
+     */
+    public function applyTax(float $subtotal): array
+    {
+        $taxPct    = $this->getTaxPercentage();
+        $taxAmount = round($subtotal * ($taxPct / 100), 2);
+        $grandTotal = round($subtotal + $taxAmount, 2);
+
+        return [
+            'tax_percentage' => $taxPct,
+            'tax_amount'     => $taxAmount,
+            'grand_total'    => $grandTotal,
+        ];
+    }
+
+    private function getTaxPercentage(): float
+    {
+        return (float) config('carpool.tax_percentage', 0);
+    }
+
+    /**
      * Split the fare total into admin commission and driver amount.
      * Returns ['admin_commission' => float, 'driver_amount' => float].
      */
