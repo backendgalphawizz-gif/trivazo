@@ -21,14 +21,6 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
           log-level: verbose
-          exclude: |
-            **/RoleMiddleware.php
-            **/2026_03_07_102249_create_activity_log_table.php
-            **/database/migrations/2026_03_07_102250_add_event_column_to_activity_log_table.php
-            **/database/migrations/2026_03_07_102251_add_batch_uuid_column_to_activity_log_table.php
-            **/debug_profile.png
-            **/fb_results.json
-            **/fb_session
-            **/ig_session
+          
          #server-dir: /   # ⚠️ IMPORTANT
          
