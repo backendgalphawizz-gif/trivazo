@@ -173,6 +173,7 @@ class CustomerRepository implements CustomerRepositoryInterface
                         ->orWhere('phone', 'like', "%$value%");
                 }
             })
+            ->orderByDesc('id')
             ->limit($dataLimit)
             ->get([DB::raw('id,IF(id <> "0", CONCAT(f_name, " ", l_name, " (", phone ,")"),CONCAT(f_name, " ", l_name)) as text')]);
     }

@@ -71,7 +71,7 @@ class CustomerController extends BaseController
         $filters = [
             'is_active' => $request['is_active'] ?? null,
             'order_date' => $request['order_date'],
-            'sort_by' => $request['sort_by'] ?? null,
+            'sort_by' => $request->filled('sort_by') ? $request->input('sort_by') : 'desc',
             'avoid_walking_customer' => 1,
         ];
         $takeItem = $request->get('choose_first');
@@ -219,7 +219,7 @@ class CustomerController extends BaseController
         $filters = [
             'is_active' => $request['is_active'] ?? null,
             'order_date' => $request['order_date'],
-            'sort_by' => $request['sort_by'] ?? null,
+            'sort_by' => $request->filled('sort_by') ? $request->input('sort_by') : 'desc',
             'avoid_walking_customer' => 1,
         ];
         $takeItem = $request->get('choose_first');

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\RestAPI\v1\CarPool;
 
+use App\Http\Controllers\RestAPI\v1\CarPool\Concerns\ResolvesCarpoolDriverFromUser;
 use App\Http\Controllers\Controller;
 use App\Models\CarPoolWithdrawalRequest;
 use App\Services\CarPoolDriverWalletService;
@@ -12,11 +13,17 @@ use Illuminate\Support\Facades\Validator;
 
 class DriverWalletController extends Controller
 {
+    use ResolvesCarpoolDriverFromUser;
+
     public function __construct(private readonly CarPoolDriverWalletService $walletService) {}
 
     public function wallet(Request $request): JsonResponse
     {
-        $wallet = $request->user('carpool_driver')->wallet;
+        $driver = $this->carpoolDriverFromUser($request);
+        if ($driver instanceof JsonResponse) {
+            return $driver;
+        }
+        $wallet = $driver->wallet;
 
         return response()->json([
             'status' => true,
@@ -31,7 +38,10 @@ class DriverWalletController extends Controller
 
     public function transactions(Request $request): JsonResponse
     {
-        $driver = $request->user('carpool_driver');
+        $driver = $this->carpoolDriverFromUser($request);
+        if ($driver instanceof JsonResponse) {
+            return $driver;
+        }
 
         $transactions = \App\Models\CarPoolTransaction::where('driver_id', $driver->id)
             ->orderByDesc('created_at')
@@ -42,7 +52,10 @@ class DriverWalletController extends Controller
 
     public function requestWithdrawal(Request $request): JsonResponse
     {
-        $driver = $request->user('carpool_driver');
+        $driver = $this->carpoolDriverFromUser($request);
+        if ($driver instanceof JsonResponse) {
+            return $driver;
+        }
 
         $validator = Validator::make($request->all(), [
             'amount'          => 'required|numeric|min:0.01',
@@ -74,7 +87,10 @@ class DriverWalletController extends Controller
 
     public function withdrawals(Request $request): JsonResponse
     {
-        $driver = $request->user('carpool_driver');
+        $driver = $this->carpoolDriverFromUser($request);
+        if ($driver instanceof JsonResponse) {
+            return $driver;
+        }
         $status = $request->get('status', 'all');
 
         $query = CarPoolWithdrawalRequest::where('driver_id', $driver->id)

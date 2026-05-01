@@ -62,12 +62,6 @@ class CarPoolServiceProvider extends EventServiceProvider
             );
         });
 
-        // Register REST API carpool routes.
-        Route::prefix('api')
-            ->middleware('api')
-            ->namespace('App\Http\Controllers')
-            ->group(base_path('routes/rest_api/v1/carpool.php'));
-
         // Register admin carpool routes.
         Route::middleware('web')
             ->namespace('App\Http\Controllers')

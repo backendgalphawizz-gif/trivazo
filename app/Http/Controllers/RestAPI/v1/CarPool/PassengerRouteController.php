@@ -7,6 +7,7 @@ use App\Models\CarPoolRoute;
 use App\Repositories\CarPoolRouteRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class PassengerRouteController extends Controller
@@ -40,7 +41,40 @@ class PassengerRouteController extends Controller
             dataLimit: (int) $request->get('limit', 15)
         );
 
-        return response()->json(['status' => true, 'routes' => $routes]);
+        $transform = fn($route) => [
+            'id'                     => $route->id,
+            'origin_name'            => $route->origin_name,
+            'destination_name'       => $route->destination_name,
+            'departure_at'           => $route->departure_at,
+            'available_seats'        => $route->available_seats,
+            'price_per_seat'         => $route->price_per_seat,
+            'currency'               => $route->currency,
+            'route_status'           => $route->route_status,
+            'driver'                 => $route->driver ? [
+                'id'                    => $route->driver->id,
+                'name'                  => $route->driver->name,
+                'rating'                => $route->driver->rating,
+                'vehicle_type'          => $route->driver->vehicle_type,
+                'vehicle_number'        => $route->driver->vehicle_number,
+                'vehicle_color'         => $route->driver->vehicle_color,
+                'vehicle_model'         => $route->driver->vehicle_model,
+                'total_completed_rides' => $route->driver->total_completed_rides,
+                'profile_image'         => $route->driver->profile_image
+                    ? Storage::disk('public')->url($route->driver->profile_image) : null,
+                'vehicle_image'         => $route->driver->vehicle_image
+                    ? Storage::disk('public')->url($route->driver->vehicle_image) : null,
+            ] : null,
+        ];
+
+        $items = $routes instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator
+            ? collect($routes->items())->map($transform)
+            : $routes->map($transform);
+
+        $meta = $routes instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator
+            ? ['total' => $routes->total(), 'per_page' => $routes->perPage(), 'current_page' => $routes->currentPage()]
+            : null;
+
+        return response()->json(array_filter(['status' => true, 'routes' => $items, 'meta' => $meta]));
     }
 
     public function show(int $id): JsonResponse
@@ -80,6 +114,10 @@ class PassengerRouteController extends Controller
                     'vehicle_color'=> $route->driver->vehicle_color,
                     'vehicle_model'=> $route->driver->vehicle_model,
                     'total_completed_rides' => $route->driver->total_completed_rides,
+                    'profile_image' => $route->driver->profile_image
+                        ? Storage::disk('public')->url($route->driver->profile_image) : null,
+                    'vehicle_image' => $route->driver->vehicle_image
+                        ? Storage::disk('public')->url($route->driver->vehicle_image) : null,
                 ] : null,
             ],
         ]);

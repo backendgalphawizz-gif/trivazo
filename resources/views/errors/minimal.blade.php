@@ -11,8 +11,8 @@
 
         <style>
             :root {
-                --blue: {{ $web_config['primary_color'] }};
-                --primary: {{ $web_config['primary_color'] }};
+                --blue: {{ $web_config['primary_color'] ?? '#0177CD' }};
+                --primary: {{ $web_config['primary_color'] ?? '#0177CD' }};
                 --bs-direction: {{ Session::get('direction') }};
                 --theme--text-light: #FFFFFF;
             }
