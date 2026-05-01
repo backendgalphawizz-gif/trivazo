@@ -433,7 +433,8 @@
 @endif
 
 
-                        @if(Helpers::module_permission_check('tow_management'))
+                        {{-- Tow Management section disabled --}}
+                        @if(false)
                             <!-- Tow Management Main Section -->
                             <li class="nav-item {{Request::is('admin/tow-management*')?'scroll-here':''}}">
                                 <small class="nav-subtitle" title="">{{translate('tow_management')}}</small>
@@ -770,7 +771,199 @@
                             </li> --}}
                         @endif
 
-                        
+                        {{-- ── CarPool Management ─────────────────────────────────────────── --}}
+                        @if(Helpers::module_permission_check('carpool_management'))
+                            <li class="nav-item {{Request::is('admin/carpool*')?'scroll-here':''}}">
+                                <small class="nav-subtitle">{{translate('carpool_management')}}</small>
+                                <small class="tio-more-horizontal nav-subtitle-replacer"></small>
+                            </li>
+
+                            {{-- Drivers --}}
+                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/carpool/drivers*')?'active':''}}">
+                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle"
+                                   href="javascript:" title="{{translate('drivers')}}">
+                                    <i class="tio-user-big nav-icon"></i>
+                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
+                                        {{translate('drivers')}}
+                                    </span>
+                                </a>
+                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
+                                    style="display: {{Request::is('admin/carpool/drivers*')?'block':'none'}}">
+                                    <li class="nav-item {{Request::is('admin/carpool/drivers/list')?'active':''}}">
+                                        <a class="nav-link" href="{{route('admin.carpool.drivers.list')}}"
+                                           title="{{translate('all_drivers')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">
+                                                {{translate('all_drivers')}}
+                                                <span class="badge badge-soft-dark badge-pill ml-1">
+                                                    {{\App\Models\CarPoolDriver::count()}}
+                                                </span>
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item {{Request::is('admin/carpool/drivers/add')?'active':''}}">
+                                        <a class="nav-link" href="{{route('admin.carpool.drivers.add')}}"
+                                           title="{{translate('add_driver')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">{{translate('add_driver')}}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item {{Request::is('admin/carpool/drivers/list?is_verified=0')?'active':''}}">
+                                        <a class="nav-link"
+                                           href="{{route('admin.carpool.drivers.list', ['is_verified' => '0'])}}"
+                                           title="{{translate('pending_verification')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">
+                                                {{translate('pending_verification')}}
+                                                @php($unverified = \App\Models\CarPoolDriver::where('is_verified', false)->count())
+                                                @if($unverified > 0)
+                                                    <span class="badge badge-soft-warning badge-pill ml-1">{{ $unverified }}</span>
+                                                @endif
+                                            </span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            {{-- Vehicle categories --}}
+                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/carpool/vehicle-categories*')?'active':''}}">
+                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle"
+                                   href="javascript:" title="{{translate('vehicle_categories')}}">
+                                    <i class="tio-gallery nav-icon"></i>
+                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
+                                        {{translate('vehicle_categories')}}
+                                    </span>
+                                </a>
+                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
+                                    style="display: {{Request::is('admin/carpool/vehicle-categories*')?'block':'none'}}">
+                                    <li class="nav-item {{Request::is('admin/carpool/vehicle-categories/list')?'active':''}}">
+                                        <a class="nav-link" href="{{route('admin.carpool.vehicle-categories.list')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">{{translate('vehicle_categories')}}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item {{Request::is('admin/carpool/vehicle-categories/add')?'active':''}}">
+                                        <a class="nav-link" href="{{route('admin.carpool.vehicle-categories.add')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">{{translate('add_vehicle_category')}}</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            {{-- Trips / Routes --}}
+                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/carpool/trips*')?'active':''}}">
+                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle"
+                                   href="javascript:" title="{{translate('trips')}}">
+                                    <i class="tio-map nav-icon"></i>
+                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
+                                        {{translate('trips')}}
+                                    </span>
+                                </a>
+                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
+                                    style="display: {{Request::is('admin/carpool/trips*')?'block':'none'}}">
+                                    <li class="nav-item {{Request::is('admin/carpool/trips/list') && !request()->has('status') ?'active':''}}">
+                                        <a class="nav-link" href="{{route('admin.carpool.trips.list')}}"
+                                           title="{{translate('all_trips')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">{{translate('all_trips')}}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item {{Request::is('admin/carpool/trips/add')?'active':''}}">
+                                        <a class="nav-link" href="{{route('admin.carpool.trips.add')}}"
+                                           title="{{translate('add_trip')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">{{translate('add_trip')}}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="{{route('admin.carpool.trips.list', ['status' => 'open'])}}"
+                                           title="{{translate('open')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">
+                                                {{translate('open')}}
+                                                <span class="badge badge-soft-success badge-pill ml-1">
+                                                    {{\App\Models\CarPoolRoute::where('route_status','open')->count()}}
+                                                </span>
+                                            </span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            {{-- Bookings --}}
+                            <li class="navbar-vertical-aside-has-menu {{Request::is('admin/carpool/bookings*')?'active':''}}">
+                                <a class="js-navbar-vertical-aside-menu-link nav-link nav-link-toggle"
+                                   href="javascript:" title="{{translate('bookings')}}">
+                                    <i class="tio-receipt-outlined nav-icon"></i>
+                                    <span class="navbar-vertical-aside-mini-mode-hidden-elements text-truncate">
+                                        {{translate('bookings')}}
+                                    </span>
+                                </a>
+                                <ul class="js-navbar-vertical-aside-submenu nav nav-sub"
+                                    style="display: {{Request::is('admin/carpool/bookings*')?'block':'none'}}">
+                                    <li class="nav-item {{Request::is('admin/carpool/bookings/list') && !request()->has('status') ?'active':''}}">
+                                        <a class="nav-link" href="{{route('admin.carpool.bookings.list')}}"
+                                           title="{{translate('all_bookings')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">
+                                                {{translate('all_bookings')}}
+                                                <span class="badge badge-soft-dark badge-pill ml-1">
+                                                    {{\App\Models\CarPoolBooking::count()}}
+                                                </span>
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item {{Request::is('admin/carpool/bookings/add')?'active':''}}">
+                                        <a class="nav-link" href="{{route('admin.carpool.bookings.add')}}"
+                                           title="{{translate('add_booking')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">{{translate('add_booking')}}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link"
+                                           href="{{route('admin.carpool.bookings.list', ['status' => 'pending'])}}"
+                                           title="{{translate('pending')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">
+                                                {{translate('pending')}}
+                                                <span class="badge badge-soft-warning badge-pill ml-1">
+                                                    {{\App\Models\CarPoolBooking::where('status','pending')->count()}}
+                                                </span>
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link"
+                                           href="{{route('admin.carpool.bookings.list', ['status' => 'completed'])}}"
+                                           title="{{translate('completed')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">
+                                                {{translate('completed')}}
+                                                <span class="badge badge-soft-success badge-pill ml-1">
+                                                    {{\App\Models\CarPoolBooking::where('status','completed')->count()}}
+                                                </span>
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link"
+                                           href="{{route('admin.carpool.bookings.list', ['status' => 'cancelled'])}}"
+                                           title="{{translate('cancelled')}}">
+                                            <span class="tio-circle nav-indicator-icon"></span>
+                                            <span class="text-truncate">
+                                                {{translate('cancelled')}}
+                                                <span class="badge badge-soft-danger badge-pill ml-1">
+                                                    {{\App\Models\CarPoolBooking::where('status','cancelled')->count()}}
+                                                </span>
+                                            </span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        @endif
+
                         @if(Helpers::module_permission_check('product_management'))
                             <li class="nav-item {{(Request::is('admin/brand*') || Request::is('admin/category*') || Request::is('admin/sub*') || Request::is('admin/attribute*') || Request::is('admin/products*'))?'scroll-here':''}}">
                                 <small class="nav-subtitle"

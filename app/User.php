@@ -16,8 +16,6 @@ class User extends Authenticatable
 {
     use Notifiable, HasApiTokens,StorageTrait;
 
-    public mixed $email;
-
     /**
      * The attributes that are mass assignable.
      *

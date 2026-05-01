@@ -99,30 +99,6 @@
                             </label>
                         </div>
                     </div>
-                    @if(isset($recaptcha) && $recaptcha['status'] == 1)
-                        <div id="recaptcha_element" class="w-100;" data-type="image"></div>
-                        <br/>
-                    @else
-                        <div class="row p-2">
-                            <div class="col-6 pr-0">
-                                <input type="text" class="form-control form-control-lg form-control-focus-none h-50px"
-                                       id="vendor-login-recaptcha-input"
-                                       name="vendorRecaptchaKey" value="" required
-                                       placeholder="{{translate('enter_captcha_value')}}">
-                            </div>
-                            <div class="col-6 input-icons bg-white rounded">
-                                <a class="get-login-recaptcha-verify cursor-pointer get-session-recaptcha-auto-fill"
-                                   data-link="{{ URL('login/recaptcha/') }}"
-                                   data-session="{{ 'vendorRecaptchaSessionKey' }}"
-                                   data-input="#vendor-login-recaptcha-input"
-                                >
-                                    <img src="{{ URL('/vendor/auth/recaptcha/1?captcha_session_id=vendorRecaptchaSessionKey') }}"
-                                         class="input-field w-90 h-50px img-fit p-0 rounded" id="default_recaptcha_id" alt="">
-                                    <i class="tio-refresh icon"></i>
-                                </a>
-                            </div>
-                        </div>
-                    @endif
 
                     <button type="submit" class="btn btn-lg btn-block btn--primary">
                         {{ translate('sign_in')}}
@@ -147,12 +123,7 @@
     </div>
 </main>
 
-<span id="message-please-check-recaptcha" data-text="{{ translate('please_check_the_recaptcha') }}"></span>
 <span id="message-copied_success" data-text="{{ translate('copied_successfully') }}"></span>
-<span id="route-get-session-recaptcha-code"
-      data-route="{{ route('get-session-recaptcha-code') }}"
-      data-mode="{{ env('APP_MODE') }}"
-></span>
 
 <script src="{{dynamicAsset(path: 'public/assets/back-end/js/vendor.min.js')}}"></script>
 <script src="{{dynamicAsset(path: 'public/assets/back-end/js/theme.min.js')}}"></script>
@@ -170,18 +141,6 @@
         });
         @endforeach
     </script>
-@endif
-
-@if(isset($recaptcha) && $recaptcha['status'] == 1)
-    <script type="text/javascript">
-        "use strict";
-        var onloadCallback = function () {
-            grecaptcha.render('recaptcha_element', {
-                'sitekey': '{{ getWebConfig(name: 'recaptcha')['site_key'] }}'
-            });
-        };
-    </script>
-    <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async defer></script>
 @endif
 
 </body>

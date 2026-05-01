@@ -42,10 +42,9 @@
                         <div class="col-md-4">
                             <label class="form-label">{{translate('Sort_By') }}</label>
                             <select class="form-control js-select2-custom" name="sort_by">
-                                <option disabled {{ is_null(request('sort_by')) ? 'selected' : '' }}>{{ translate('Select_Customer_sorting_order') }}</option>
-                                <option value="order_amount">{{ translate('Sort_By_Order_Amount') }}</option>
+                                <option value="order_amount" {{ request('sort_by') === 'order_amount' ? 'selected' : '' }}>{{ translate('Sort_By_Order_Amount') }}</option>
                                 <option value="asc" {{ request('sort_by') === 'asc' ? 'selected' : '' }}>{{translate('Sort_By_Oldest')}}</option>
-                                <option value="desc" {{ request('sort_by') === 'desc' ? 'selected' : '' }}>{{translate('Sort_By_Newest')}}</option>
+                                <option value="desc" {{ request('sort_by') === 'desc' || request('sort_by') === null || request('sort_by') === '' ? 'selected' : '' }}>{{translate('Sort_By_Newest')}}</option>
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -77,7 +76,7 @@
                             <input type="hidden" name="order_date" value="{{request('order_date')}}">
                             <input type="hidden" name="customer_joining_date" value="{{request('customer_joining_date')}}">
                             <input type="hidden" name="is_active" value="{{request('is_active')}}">
-                            <input type="hidden" name="sort_by" value="{{request('sort_by')}}">
+                            <input type="hidden" name="sort_by" value="{{ request('sort_by', 'desc') }}">
                             <input type="hidden" name="choose_first" value="{{request('choose_first')}}">
                             <div class="input-group input-group-merge input-group-custom">
                                 <div class="input-group-prepend">
@@ -91,7 +90,7 @@
                             </div>
                         </form>
                         <div class="dropdown">
-                            <a type="button" class="btn btn-outline--primary text-nowrap" href="{{route('admin.customer.export', ['sort_by' => request('sort_by'), 'choose_first' => request('choose_first'),'is_active' => request('is_active'), 'order_date' => request('order_date'),'customer_joining_date' => request('customer_joining_date'),  'searchValue' => request('searchValue')])}}">
+                            <a type="button" class="btn btn-outline--primary text-nowrap" href="{{route('admin.customer.export', ['sort_by' => request('sort_by', 'desc'), 'choose_first' => request('choose_first'),'is_active' => request('is_active'), 'order_date' => request('order_date'),'customer_joining_date' => request('customer_joining_date'),  'searchValue' => request('searchValue')])}}">
                                 <img width="14" src="{{dynamicAsset(path: 'public/assets/back-end/img/excel.png')}}" alt="" class="excel">
                                 <span class="ps-2">{{ translate('export') }}</span>
                             </a>

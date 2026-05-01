@@ -1,0 +1,856 @@
+{
+  "info": {
+    "name": "Trivazo — CarPool Passenger API",
+    "_postman_id": "trivazo-carpool-passenger-v1",
+    "description": "Complete CarPool user/passenger API for Trivazo. Base URL: {{base_url}}/api/v1/carpool\n\nSetup:\n1. Set `base_url` in your environment (e.g. http://localhost:8000)\n2. Login via any existing auth endpoint to get a bearer token\n3. Set `auth_token` in your environment\n\nAll protected endpoints use: Authorization: Bearer {{auth_token}}",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000", "type": "string" },
+    { "key": "auth_token", "value": "", "type": "string" },
+    { "key": "route_id", "value": "1", "type": "string" },
+    { "key": "booking_id", "value": "1", "type": "string" },
+    { "key": "driver_id", "value": "1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth (Existing)",
+      "description": "Standard app user login/register to obtain bearer token for carpool passenger endpoints.",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_or_phone\": \"user@example.com\",\n  \"password\": \"password\",\n  \"guest_id\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has token', () => pm.expect(res.token).to.be.a('string').and.not.empty);",
+                  "",
+                  "if (res.token) {",
+                  "    pm.collectionVariables.set('auth_token', res.token);",
+                  "    console.log('Token saved:', res.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser@example.com\",\n  \"phone\": \"+919876543210\",\n  \"password\": \"Password@123\",\n  \"password_confirmation\": \"Password@123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "auth", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Status 200 or 201', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "pm.test('Has token', () => pm.expect(res.token).to.be.a('string'));",
+                  "if (res.token) pm.collectionVariables.set('auth_token', res.token);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Search & Routes (Public)",
+      "description": "Public endpoints — no auth required.",
+      "item": [
+        {
+          "name": "Search Available Trips",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/routes/search?origin_lat=19.0760&origin_lng=72.8777&destination_lat=18.5204&destination_lng=73.8567&date=2026-04-15&seats=1&radius_km=5&limit=15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "routes", "search"],
+              "query": [
+                { "key": "origin_lat",       "value": "19.0760",    "description": "Origin latitude (Mumbai)" },
+                { "key": "origin_lng",       "value": "72.8777",    "description": "Origin longitude" },
+                { "key": "destination_lat",  "value": "18.5204",    "description": "Destination latitude (Pune)" },
+                { "key": "destination_lng",  "value": "73.8567",    "description": "Destination longitude" },
+                { "key": "date",             "value": "2026-04-15", "description": "Trip date (Y-m-d)" },
+                { "key": "seats",            "value": "1",          "description": "Number of seats needed" },
+                { "key": "radius_km",        "value": "5",          "description": "Search radius in km (default 5)" },
+                { "key": "limit",            "value": "15",         "description": "Results per page" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Routes is array', () => pm.expect(res.routes).to.be.an('object'));",
+                  "",
+                  "// Save first route id for later requests",
+                  "if (res.routes && res.routes.data && res.routes.data.length > 0) {",
+                  "    pm.collectionVariables.set('route_id', res.routes.data[0].id);",
+                  "    console.log('Saved route_id:', res.routes.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Trip Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/routes/{{route_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "routes", "{{route_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Has route object', () => pm.expect(res.route).to.be.an('object'));",
+                  "pm.test('Route has driver', () => pm.expect(res.route.driver).to.be.an('object'));",
+                  "pm.test('Route has available_seats', () => pm.expect(res.route.available_seats).to.be.a('number'));",
+                  "",
+                  "if (res.route && res.route.driver) {",
+                  "    pm.collectionVariables.set('driver_id', res.route.driver.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "View Driver Public Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/driver/{{driver_id}}/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "driver", "{{driver_id}}", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Has driver object', () => pm.expect(res.driver).to.be.an('object'));",
+                  "pm.test('Has rating', () => pm.expect(res.driver.rating).to.exist);",
+                  "pm.test('Has reviews array', () => pm.expect(res.driver.reviews).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "description": "Passenger profile and stats. Requires: Authorization: Bearer {{auth_token}}",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Has profile', () => pm.expect(res.profile).to.be.an('object'));",
+                  "pm.test('Has stats', () => pm.expect(res.profile.stats).to.be.an('object'));",
+                  "pm.test('Stats has total_bookings', () => pm.expect(res.profile.stats.total_bookings).to.be.a('number'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Active Ride",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/active",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "active"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Has active_ride key', () => pm.expect(res).to.have.property('active_ride'));",
+                  "",
+                  "if (res.active_ride) {",
+                  "    pm.collectionVariables.set('booking_id', res.active_ride.id);",
+                  "    console.log('Active ride booking_id saved:', res.active_ride.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "My Reviews",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/reviews?limit=15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "reviews"],
+              "query": [
+                { "key": "limit", "value": "15" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Reviews is array', () => pm.expect(res.reviews).to.be.an('array'));",
+                  "pm.test('Has meta', () => pm.expect(res.meta).to.be.an('object'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "description": "Booking CRUD + pay / cancel / review. Requires: Authorization: Bearer {{auth_token}}",
+      "item": [
+        {
+          "name": "List My Bookings",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/bookings?status=all&limit=15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "bookings"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "all",
+                  "description": "Filter: all | pending_payment | confirmed | departed | completed | cancelled"
+                },
+                { "key": "limit", "value": "15" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Bookings is object', () => pm.expect(res.bookings).to.be.an('object'));",
+                  "",
+                  "// Save first booking id",
+                  "if (res.bookings && res.bookings.data && res.bookings.data.length > 0) {",
+                  "    pm.collectionVariables.set('booking_id', res.bookings.data[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Booking (Wallet Payment)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"route_id\": {{route_id}},\n  \"seat_count\": 3,\n  \"pickup_name\": \"Mumbai Central\",\n  \"pickup_lat\": 18.9691,\n  \"pickup_lng\": 72.8194,\n  \"drop_name\": \"Pune Station\",\n  \"drop_lat\": 18.5279,\n  \"drop_lng\": 73.8742,\n  \"payment_method\": \"wallet\",\n  \"passengers\": [\n    {\n      \"name\": \"Rahul Sharma\",\n      \"phone\": \"+919876543210\",\n      \"gender\": \"male\"\n    },\n    {\n      \"name\": \"Priya Mehta\",\n      \"phone\": \"+919876543211\",\n      \"gender\": \"female\"\n    },\n    {\n      \"name\": \"Arjun Singh\",\n      \"phone\": \"+919876543212\",\n      \"gender\": \"male\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "bookings"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Has booking', () => pm.expect(res.booking).to.be.an('object'));",
+                  "pm.test('Booking has id', () => pm.expect(res.booking.id).to.be.a('number'));",
+                  "pm.test('Booking has booking_code', () => pm.expect(res.booking.booking_code).to.be.a('string'));",
+                  "",
+                  "if (res.booking && res.booking.id) {",
+                  "    pm.collectionVariables.set('booking_id', res.booking.id);",
+                  "    console.log('Saved booking_id:', res.booking.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Booking (Online Payment)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"route_id\": {{route_id}},\n  \"seat_count\": 3,\n  \"pickup_name\": \"Andheri East\",\n  \"pickup_lat\": 19.1136,\n  \"pickup_lng\": 72.8697,\n  \"drop_name\": \"Hinjewadi Phase 1\",\n  \"drop_lat\": 18.5914,\n  \"drop_lng\": 73.7389,\n  \"payment_method\": \"online\",\n  \"passengers\": [\n    {\n      \"name\": \"Sneha Patel\",\n      \"phone\": \"+918765432109\",\n      \"gender\": \"female\"\n    },\n    {\n      \"name\": \"Vikram Das\",\n      \"phone\": \"+918765432110\",\n      \"gender\": \"male\"\n    },\n    {\n      \"name\": \"Neha Joshi\",\n      \"phone\": \"+918765432111\",\n      \"gender\": \"female\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "bookings"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Has booking', () => pm.expect(res.booking).to.be.an('object'));",
+                  "pm.test('Has transaction', () => pm.expect(res.transaction).to.be.an('object'));",
+                  "pm.test('Booking status is pending_payment', () => pm.expect(res.booking.payment_status).to.equal('pending'));",
+                  "",
+                  "if (res.booking && res.booking.id) {",
+                  "    pm.collectionVariables.set('booking_id', res.booking.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Booking Detail",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/bookings/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "bookings", "{{booking_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Has booking', () => pm.expect(res.booking).to.be.an('object'));",
+                  "pm.test('Has route', () => pm.expect(res.booking.route).to.be.an('object'));",
+                  "pm.test('Has passengers array', () => pm.expect(res.booking.passengers).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pay for Booking (Online gateway callback)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gateway_reference\": \"PAY_REF_123456789\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/bookings/{{booking_id}}/pay",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "bookings", "{{booking_id}}", "pay"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Success message', () => pm.expect(res.message).to.include('confirmed'));",
+                  "pm.test('Booking has paid status', () => pm.expect(res.booking.payment_status).to.equal('paid'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Change of plans\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/bookings/{{booking_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "bookings", "{{booking_id}}", "cancel"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Cancellation message', () => pm.expect(res.message).to.include('cancelled'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Submit Review",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Excellent ride! Driver was very punctual and the vehicle was clean.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/bookings/{{booking_id}}/review",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "bookings", "{{booking_id}}", "review"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Review submitted', () => pm.expect(res.message).to.include('submitted'));",
+                  "pm.test('Has review object', () => pm.expect(res.review).to.be.an('object'));",
+                  "pm.test('Review has rating', () => pm.expect(res.review.rating).to.be.a('number').within(1, 5));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Passenger to Booking",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rahul Sharma\",\n  \"phone\": \"+919876543210\",\n  \"gender\": \"male\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/bookings/{{booking_id}}/passengers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "bookings", "{{booking_id}}", "passengers"]
+            },
+            "description": "Add a co-passenger to an existing pending or confirmed booking. Cannot exceed the booked seat count."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Passenger added', () => pm.expect(res.message).to.include('added'));",
+                  "pm.test('Has passenger object', () => pm.expect(res.passenger).to.be.an('object'));",
+                  "pm.test('Passenger has name', () => pm.expect(res.passenger.name).to.be.a('string'));",
+                  "pm.test('Has total count', () => pm.expect(res.total).to.be.a('number'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Saved Passengers (Master List)",
+      "description": "Manage the user's personal saved passengers list. Add passengers here once, then pick from the list when creating a booking. Auth: Bearer {{auth_token}}",
+      "item": [
+        {
+          "name": "Get Saved Passengers List",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/saved-passengers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "saved-passengers"]
+            },
+            "description": "Returns all saved passengers for the logged-in user, sorted by name."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Passengers is array', () => pm.expect(res.passengers).to.be.an('array'));",
+                  "pm.test('Has total count', () => pm.expect(res.total).to.be.a('number'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Multiple Passengers to List",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"passengers\": [\n    {\n      \"name\": \"Rahul Sharma\",\n      \"phone\": \"+919876543210\",\n      \"gender\": \"male\"\n    },\n    {\n      \"name\": \"Priya Mehta\",\n      \"phone\": \"+919876543211\",\n      \"gender\": \"female\"\n    },\n    {\n      \"name\": \"Arjun Singh\",\n      \"phone\": \"+919876543212\",\n      \"gender\": \"male\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/saved-passengers",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "saved-passengers"]
+            },
+            "description": "Add one or multiple passengers to the master list in one call. All are linked to the logged-in user's ID."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Passengers created', () => pm.expect(res.passengers).to.be.an('array').and.have.lengthOf.above(0));",
+                  "pm.test('Message mentions added', () => pm.expect(res.message).to.include('added'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove Saved Passenger",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/saved-passengers/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "saved-passengers", "1"]
+            },
+            "description": "Remove a passenger from the saved list by their ID. Only the owner can delete."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Message mentions removed', () => pm.expect(res.message).to.include('removed'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Live Tracking",
+      "description": "Real-time ride tracking. Requires: Authorization: Bearer {{auth_token}}",
+      "item": [
+        {
+          "name": "Full Tracking Info",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/track/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "track", "{{booking_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Has tracking object', () => pm.expect(res.tracking).to.be.an('object'));",
+                  "pm.test('Has booking_status', () => pm.expect(res.tracking.booking_status).to.be.a('string'));",
+                  "pm.test('Has route info', () => pm.expect(res.tracking.route).to.be.an('object'));",
+                  "pm.test('Has driver info', () => pm.expect(res.tracking.driver).to.be.an('object'));",
+                  "pm.test('Has status_timeline', () => pm.expect(res.tracking.status_timeline).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Driver Location (Polling — lightweight)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{auth_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/carpool/passenger/track/{{booking_id}}/location",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "carpool", "passenger", "track", "{{booking_id}}", "location"]
+            },
+            "description": "Lightweight endpoint — call every 10-15 seconds from mobile to get driver's current GPS position."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "",
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status flag true', () => pm.expect(res.status).to.be.true);",
+                  "pm.test('Has booking_status', () => pm.expect(res.booking_status).to.be.a('string'));",
+                  "pm.test('Has driver_location', () => pm.expect(res.driver_location).to.be.an('object'));",
+                  "pm.test('Response time < 500ms', () => pm.expect(pm.response.responseTime).to.be.below(500));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

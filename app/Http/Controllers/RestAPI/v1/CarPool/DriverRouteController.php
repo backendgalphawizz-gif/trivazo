@@ -1,7 +1,8 @@
-    <?php
+<?php
 
 namespace App\Http\Controllers\RestAPI\v1\CarPool;
 
+use App\Http\Controllers\RestAPI\v1\CarPool\Concerns\ResolvesCarpoolDriverFromUser;
 use App\Enums\CarPoolRouteStatus;
 use App\Events\CarPool\CarPoolRideCompletedEvent;
 use App\Http\Controllers\Controller;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Validator;
 
 class DriverRouteController extends Controller
 {
+    use ResolvesCarpoolDriverFromUser;
+
     public function __construct(
         private readonly CarPoolRouteRepository $routeRepo,
         private readonly CarPoolBookingService $bookingService
@@ -22,7 +25,10 @@ class DriverRouteController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $driver = $request->user('carpool_driver');
+        $driver = $this->carpoolDriverFromUser($request);
+        if ($driver instanceof JsonResponse) {
+            return $driver;
+        }
 
         if (!$driver->is_verified) {
             return response()->json(['status' => false, 'message' => 'Account not yet verified.'], 403);
@@ -66,7 +72,10 @@ class DriverRouteController extends Controller
 
     public function myRoutes(Request $request): JsonResponse
     {
-        $driver = $request->user('carpool_driver');
+        $driver = $this->carpoolDriverFromUser($request);
+        if ($driver instanceof JsonResponse) {
+            return $driver;
+        }
         $status = $request->get('status', 'all');
 
         $routes = $this->routeRepo->getListWhere(
@@ -81,7 +90,10 @@ class DriverRouteController extends Controller
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $driver = $request->user('carpool_driver');
+        $driver = $this->carpoolDriverFromUser($request);
+        if ($driver instanceof JsonResponse) {
+            return $driver;
+        }
         $route  = $this->routeRepo->getFirstWhere(['id' => $id, 'driver_id' => $driver->id], ['bookings.passenger', 'bookings.passengers']);
 
         if (!$route) {
@@ -93,7 +105,10 @@ class DriverRouteController extends Controller
 
     public function depart(Request $request, int $id): JsonResponse
     {
-        $driver = $request->user('carpool_driver');
+        $driver = $this->carpoolDriverFromUser($request);
+        if ($driver instanceof JsonResponse) {
+            return $driver;
+        }
         $route  = $this->routeRepo->getFirstWhere(['id' => $id, 'driver_id' => $driver->id]);
 
         if (!$route) {
@@ -119,7 +134,10 @@ class DriverRouteController extends Controller
 
     public function complete(Request $request, int $id): JsonResponse
     {
-        $driver = $request->user('carpool_driver');
+        $driver = $this->carpoolDriverFromUser($request);
+        if ($driver instanceof JsonResponse) {
+            return $driver;
+        }
         $route  = $this->routeRepo->getFirstWhere(['id' => $id, 'driver_id' => $driver->id], ['bookings']);
 
         if (!$route) {
@@ -152,7 +170,10 @@ class DriverRouteController extends Controller
 
     public function destroy(Request $request, int $id): JsonResponse
     {
-        $driver = $request->user('carpool_driver');
+        $driver = $this->carpoolDriverFromUser($request);
+        if ($driver instanceof JsonResponse) {
+            return $driver;
+        }
         $route  = $this->routeRepo->getFirstWhere(['id' => $id, 'driver_id' => $driver->id]);
 
         if (!$route) {
@@ -169,6 +190,34 @@ class DriverRouteController extends Controller
         return response()->json(['status' => true, 'message' => 'Route cancelled.']);
     }
 
+    /**
+     * POST /api/v1/carpool/driver/location
+     * Driver pushes their current GPS position (called every ~10s from driver app).
+     */
+    public function updateLocation(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $driver = $this->carpoolDriverFromUser($request);
+        if ($driver instanceof JsonResponse) {
+            return $driver;
+        }
+        $driver->update([
+            'current_lat'       => $request->lat,
+            'current_lng'       => $request->lng,
+            'last_location_at'  => now(),
+        ]);
+
+        return response()->json(['status' => true, 'message' => 'Location updated.']);
+    }
+
     private function formatRoute(CarPoolRoute $route): array
     {
         return [
@@ -179,6 +228,7 @@ class DriverRouteController extends Controller
             'destination_name'      => $route->destination_name,
             'destination_lat'       => $route->destination_lat,
             'destination_lng'       => $route->destination_lng,
+            'waypoints'             => $route->waypoints,
             'ride_type'             => $route->ride_type,
             'departure_at'          => $route->departure_at,
             'estimated_duration_min'=> $route->estimated_duration_min,

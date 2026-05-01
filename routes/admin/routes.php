@@ -177,6 +177,8 @@ use App\Http\Controllers\Admin\RoomManagement\RoomController;
 use App\Http\Controllers\Admin\TowManagement\TowProviderController;
 use App\Http\Controllers\Admin\TowManagement\TowRequestController;
 use App\Http\Controllers\Admin\TowManagement\ActiveTripController;
+use App\Http\Controllers\Admin\CarPool\AdminCarPoolVehicleCategoryController;
+use App\Http\Controllers\Admin\CarPool\AdminCarPoolWebController;
 
 
 Route::controller(SharedController::class)->group(function () {
@@ -192,7 +194,6 @@ Route::controller(FirebaseController::class)->group(function () {
 
 Route::group(['prefix' => 'login'], function () {
     Route::get('{loginUrl}', [LoginController::class, 'index']);
-    Route::get('recaptcha/{tmp}', [LoginController::class, 'generateReCaptcha'])->name('recaptcha');
     Route::post('/', [LoginController::class, 'login'])->name('login');
 });
 
@@ -359,8 +360,50 @@ Route::group(['prefix' => 'tow-management', 'as' => 'tow-management.', 'middlewa
     });
 });
 
+// ── CarPool Management (Web Panel) ──────────────────────────────────────────
+Route::group(['prefix' => 'carpool', 'as' => 'carpool.', 'middleware' => ['module:carpool_management']], function () {
 
+    // ── Vehicle categories (driver vehicle type dropdown) ───────────────────
+    Route::prefix('vehicle-categories')->name('vehicle-categories.')->controller(AdminCarPoolVehicleCategoryController::class)->group(function () {
+        Route::get('list',   'index')->name('list');
+        Route::get('add',    'create')->name('add');
+        Route::post('add',   'store')->name('store');
+        Route::get('{id}/edit',    'edit')->name('edit');
+        Route::post('{id}/update', 'update')->name('update');
+        Route::post('{id}/delete', 'destroy')->name('delete');
+        Route::post('{id}/toggle-active', 'toggleActive')->name('toggle-active');
+    });
 
+    // ── Drivers ──────────────────────────────────────────────────────────────
+    Route::prefix('drivers')->name('drivers.')->controller(AdminCarPoolWebController::class)->group(function () {
+        Route::get('list',              'driversList')->name('list');
+        Route::get('add',               'driversAdd')->name('add');
+        Route::post('add',              'driversStore')->name('store');
+        Route::get('{id}/edit',         'driversEdit')->name('edit');
+        Route::post('{id}/update',      'driversUpdate')->name('update');
+        Route::post('{id}/verify',      'driversVerify')->name('verify');
+        Route::post('{id}/status',      'driversStatus')->name('status');
+    });
+
+    // ── Trips / Routes ────────────────────────────────────────────────────────
+    Route::prefix('trips')->name('trips.')->controller(AdminCarPoolWebController::class)->group(function () {
+        Route::get('list',              'tripsList')->name('list');
+        Route::get('add',               'tripsAdd')->name('add');
+        Route::post('add',              'tripsStore')->name('store');
+        Route::get('{id}/edit',         'tripsEdit')->name('edit');
+        Route::put('{id}/edit',         'tripsUpdate')->name('update');
+        Route::post('{id}/status',      'tripsUpdateStatus')->name('status');
+    });
+
+    // ── Bookings ──────────────────────────────────────────────────────────────
+    Route::prefix('bookings')->name('bookings.')->controller(AdminCarPoolWebController::class)->group(function () {
+        Route::get('list',              'bookingsList')->name('list');
+        Route::get('add',               'bookingsAdd')->name('add');
+        Route::post('add',              'bookingsStore')->name('store');
+        Route::get('{id}',              'bookingsShow')->name('show');
+        Route::post('{id}/status',      'bookingsUpdateStatus')->name('status');
+    });
+});
 
 
 Route::group([

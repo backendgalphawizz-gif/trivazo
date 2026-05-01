@@ -32,6 +32,7 @@ class CarPoolBookingService
         $booking = CarPoolBooking::create([
             'route_id'                => $route->id,
             'passenger_id'            => $data['passenger_id'],
+            'user_id'                 => $data['passenger_id'],
             'pickup_name'             => $data['pickup_name'] ?? $route->origin_name,
             'pickup_lat'              => $data['pickup_lat'] ?? $route->origin_lat,
             'pickup_lng'              => $data['pickup_lng'] ?? $route->origin_lng,
@@ -52,9 +53,11 @@ class CarPoolBookingService
         if (!empty($data['passengers']) && is_array($data['passengers'])) {
             foreach ($data['passengers'] as $p) {
                 $booking->passengers()->create([
-                    'name'   => $p['name'] ?? '',
-                    'phone'  => $p['phone'] ?? null,
-                    'gender' => $p['gender'] ?? null,
+                    'saved_passenger_id' => $p['saved_passenger_id'] ?? $p['id'] ?? null,
+                    'name'               => $p['name'] ?? '',
+                    'phone'              => $p['phone'] ?? null,
+                    'gender'             => $p['gender'] ?? null,
+                    'age'                => $p['age'] ?? null,
                 ]);
             }
         }
