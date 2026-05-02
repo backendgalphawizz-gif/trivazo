@@ -16,3 +16,7 @@ npm-debug.log
 yarn-error.log
 composer-setup.php
 .DS_Store
+<<<<<<< HEAD
+=======
+/public/assets/back-end/js/theme.min.js
+>>>>>>> aman-feature
